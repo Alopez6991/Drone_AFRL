@@ -2,7 +2,7 @@ This code is used to get the control inputs needed to achive desired trajectorie
 
 # The Dynamics Model
 The state vector and its time derivative are defined as follows:
-![State Vector](images/states_and_derivative.svg)
+![State Vector](images/states_and_derivatives.svg)
 
 
 ![Dynamics](images/dynamics.svg)
