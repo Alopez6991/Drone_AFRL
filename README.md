@@ -4,11 +4,11 @@ This code is used to get the control inputs needed to achive desired trajectorie
 # The Dynamics Model
 The state vector and its time derivative are defined as follows: <br />
 
-![State Vector](images/states_and_derivatives_blue.svg) <br />
+![State Vector](images/states_and_derivatives_black.svg) <br />
 
 The dynamics are defined as follows: <br />
 
-![Dynamics](images/dynamics_blue.svg) <br />
+![Dynamics](images/dynamics_black.svg) <br />
 
 The input dynamics are defines as follows: <br />
 
