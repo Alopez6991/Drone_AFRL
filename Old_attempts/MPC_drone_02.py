@@ -1,7 +1,7 @@
 import sys
 import os
 
-sys.path.append(os.path.join('/home/austin/Nonlinear_and_Data_Driven_Estimation/', 'Drone', 'util'))
+sys.path.append(os.path.join('/home/austin/Drone_AFRL/','util'))
 
 sys.path.append(os.path.join('/home/austin', 'wind-observer', 'util'))
 
@@ -14,6 +14,8 @@ from scipy.optimize import fsolve
 import matplotlib.pyplot as plt
 from matplotlib import cm, colors
 from matplotlib.colors import ListedColormap
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.animation as animation
 import figurefirst as fifi
 # sys.path.append('/home/austin/wind-observer/util/figure_functions.py')
 import figure_functions as ff
@@ -24,7 +26,7 @@ import do_mpc
 from setdict import SetDict
 
 class MpcDron02:
-    def __init__(self,vx,vy,vz,psi,x=None,y=None,z=None,phi=None,theta=None,phidot=None,thetadot=None,psidot=None,x0=None, dt=0.01, n_horizon=20, r_weight=1e-10, run=True):
+    def __init__(self,vx,vy,vz,psi=None,x=None,y=None,z=None,phi=None,theta=None,phidot=None,thetadot=None,psidot=None,x0=None, dt=0.01, n_horizon=20, r_weight=0.0, run=True):
     
         # Set set-point time series - seting the target values for velocity x, velocity y, velocity z, and psi(yaw/heading)
         self.vx = vx.copy()
@@ -51,19 +53,22 @@ class MpcDron02:
         self.phidot = np.array([phidot]) if phidot is not None else np.array([0.0])
         self.thetadot = np.array([thetadot]) if thetadot is not None else np.array([0.0])
         # self.psidot = np.array([psidot]) if psidot is not None else np.array([0.0])
+        # self.psi = np.array([psi]) if psi is not None else np.array([0.0])
         
 
 
         # Set initial state
         m = 5.0     # mass
-        l = 1.0     # length
-        Ix = 1800.0    # moment of inertia about x
-        Iy = 1800.0    # moment of inertia about y
-        Iz = 1800.0    # moment of inertia about z
+        l = 0.4     # length
+        Ix = 1.0    # moment of inertia about x
+        Iy = 1.0    # moment of inertia about y
+        Iz = 1.0    # moment of inertia about z
         Jr = 1.0    # rotor inertia
         g = 9.81    # gravity
-        b = .01    # thrust constant
+        b = 1.0    # thrust constant
         d = 1.0     # drag constant
+        Dl = 2.0     # drag from ground speed
+        Dr = 2.0     # drag from rotation
         self.ui=np.sqrt((m*g)/(4*b))/10 #initial input
         print('ui:',self.ui)
 
@@ -136,22 +141,62 @@ class MpcDron02:
 
         # Define state equations for the MPC model
         self.model.set_rhs('x', vx) 
-        self.model.set_rhs('vx', (cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi))*U1/m)
+        self.model.set_rhs('vx', (cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi))*U1/m - Dl*vx/m)
         self.model.set_rhs('y', vy)
-        self.model.set_rhs('vy', (cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi))*U1/m)
+        self.model.set_rhs('vy', (cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi))*U1/m - Dl*vy/m)
         self.model.set_rhs('z', vz)
-        self.model.set_rhs('vz', (cos(phi)*cos(theta))*U1/m)
+        self.model.set_rhs('vz', (cos(phi)*cos(theta))*U1/m - Dl*vz/m - g)
         self.model.set_rhs('phi', phidot)
-        self.model.set_rhs('phidot', thetadot*psidot*(Iy-Iz)/(Ix)-Jr*thetadot*omega/Ix+U2*l/Ix)
+        self.model.set_rhs('phidot', thetadot*psidot*(Iy-Iz)/(Ix)-Jr*thetadot*omega/Ix+U2*l/Ix - phidot*Dr/Ix)
         self.model.set_rhs('theta', thetadot)
-        self.model.set_rhs('thetadot', phidot*psidot*(Iz-Ix)/(Iy)+Jr*phidot*omega/Iy+U3*l/Iy)
+        self.model.set_rhs('thetadot', phidot*psidot*(Iz-Ix)/(Iy)+Jr*phidot*omega/Iy+U3*l/Iy - thetadot*Dr/Iy)
         self.model.set_rhs('psi', psidot)
-        self.model.set_rhs('psidot', phidot*thetadot*(Ix-Iy)/(Iz)+U4/Iz)
+        self.model.set_rhs('psidot', phidot*thetadot*(Ix-Iy)/(Iz)+U4/Iz - psidot*Dr/Iz)
+
+        # self.model.set_rhs('x', vx) 
+        # self.model.set_rhs('vx', (cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi))*U1/m )
+        # self.model.set_rhs('y', vy)
+        # self.model.set_rhs('vy', (cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi))*U1/m )
+        # self.model.set_rhs('z', vz)
+        # self.model.set_rhs('vz', (cos(phi)*cos(theta))*U1/m - g)
+        # self.model.set_rhs('phi', phidot)
+        # self.model.set_rhs('phidot', thetadot*psidot*(Iy-Iz)/(Ix)-Jr*thetadot*omega/Ix+U2*l/Ix )
+        # self.model.set_rhs('theta', thetadot)
+        # self.model.set_rhs('thetadot', phidot*psidot*(Iz-Ix)/(Iy)+Jr*phidot*omega/Iy+U3*l/Iy )
+        # self.model.set_rhs('psi', psidot)
+        # self.model.set_rhs('psidot', phidot*thetadot*(Ix-Iy)/(Iz)+U4/Iz )
+
+        # self.model.set_rhs('x', vx) 
+        # self.model.set_rhs('vx', (1*theta*cos(psi) + phi*sin(psi))*U1/m - Dl*vx/m)
+        # self.model.set_rhs('y', vy)
+        # self.model.set_rhs('vy', (1*theta*sin(psi) - phi*cos(psi))*U1/m - Dl*vy/m)
+        # self.model.set_rhs('z', vz)
+        # self.model.set_rhs('vz', (1*1)*U1/m - g - Dl*vz/m)
+        # self.model.set_rhs('phi', phidot)
+        # self.model.set_rhs('phidot', thetadot*psidot*(Iy-Iz)/(Ix)-Jr*thetadot*omega/Ix+U2*l/Ix - phidot*Dr/Ix)
+        # self.model.set_rhs('theta', thetadot)
+        # self.model.set_rhs('thetadot', phidot*psidot*(Iz-Ix)/(Iy)+Jr*phidot*omega/Iy+U3*l/Iy - thetadot*Dr/Iy)
+        # self.model.set_rhs('psi', psidot)
+        # self.model.set_rhs('psidot', phidot*thetadot*(Ix-Iy)/(Iz)+U4/Iz - psidot*Dr/Iz)
 
 
         # Build the MPC model
         self.model.setup()
         self.mpc=do_mpc.controller.MPC(self.model)
+
+        # Set lowwer bounds on state variables
+        ANG=45
+        self.mpc.bounds['lower','_x', 'z'] = 0
+        self.mpc.bounds['lower','_x', 'phi'] = -ANG*2*np.pi/180
+        self.mpc.bounds['lower','_x', 'theta'] = -ANG*2*np.pi/180
+        self.mpc.bounds['lower','_x', 'psi'] = -np.pi
+
+        # Set upper bounds on state variables
+        self.mpc.bounds['upper','_x', 'phi'] = ANG*2*np.pi/180
+        self.mpc.bounds['upper','_x', 'theta'] = ANG*2*np.pi/180
+        self.mpc.bounds['upper','_x', 'psi'] = np.pi
+
+        # Set bounds on control inputs
         self.mpc.bounds['lower','_u', 'u1'] = 0
         self.mpc.bounds['lower','_u', 'u2'] = 0
         self.mpc.bounds['lower','_u', 'u3'] = 0
@@ -322,7 +367,7 @@ class MpcDron02:
         self.u_mpc = [u0]
 
         # Run simulation
-        x_step =x0.copy()
+        x_step = np.full(len(x0),0.0)
         for k in range(self.n_points - 1):
             u_step = self.mpc.make_step(x_step)
             # u_step[:]=1
@@ -436,6 +481,65 @@ class MpcDron02:
         plt.xlabel('time')
         plt.ylabel('u4')
         plt.legend()
+
+        plt.figure()
+        plt.plot(np.array(self.x_mpc .T[0]),np.array(self.x_mpc .T[2]),color='black')
+        plt.xlabel('x')
+        plt.ylabel('y')
+
+        plt.figure()
+
+        # Assuming xt, yt, zt as the coordinates for the 3D dotted line
+        fig = plt.figure(figsize=(10,10))
+        ax = fig.add_subplot(111, projection='3d')
+
+        x = np.array(self.x_mpc .T[0])
+        y = np.array(self.x_mpc .T[2])
+        z = np.array(self.x_mpc .T[4])
+
+        # Calculate dx, dy based on yaw (assuming yaw is in radians)
+        dx =np.array(self.x_mpc .T[1]) 
+        dy =np.array(self.x_mpc .T[2]) 
+        dz =np.array(self.x_mpc .T[3])
+
+        # Assuming time is another array of the same length
+        time = self.t_mpc
+
+
+        sc = ax.scatter(x, y, z, c=time)
+
+       
+# Set the x, y, z limits to be the same
+        max_range = np.array([x.max()-x.min(), y.max()-y.min(), z.max()-z.min()]).max() / 2.0
+
+        mid_x = (x.max()+x.min()) * 0.5
+        mid_y = (y.max()+y.min()) * 0.5
+        mid_z = (z.max()+z.min()) * 0.5
+        ax.set_xlim(mid_x - max_range, mid_x + max_range)
+        ax.set_ylim(mid_y - max_range, mid_y + max_range)
+        ax.set_zlim(mid_z - max_range, mid_z + max_range)#     ax.quiver(x[i], y[i], z[i], dx[i], dy[i], dz[i], length=0.25, color='black')
+
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+
+        cbar = plt.colorbar(sc)
+
+        # Add a label to the colorbar
+        cbar.set_label('Time')
+
+        plt.show()
+
+
+        # plt.figure()
+        # plt.plot(self.t_mpc,np.array(self.u_mpc.T[0]),label='u1',color='blue',alpha=0.5,linewidth=w)
+        # plt.plot(self.t_mpc,np.array(self.u_mpc.T[1]),label='u2',color='red',alpha=0.5,linewidth=w)
+        # plt.plot(self.t_mpc,np.array(self.u_mpc.T[2]),label='u3',color='green',alpha=0.5,linewidth=w)
+        # plt.plot(self.t_mpc,np.array(self.u_mpc.T[3]),label='u4',color='purple',alpha=0.5,linewidth=w)
+        # plt.xlabel('time')
+        # plt.ylabel('$u_{1} - u_{4}$')
+        # plt.ylim([8,12])
+        # plt.legend()
 
         return self.x_mpc, self.u_mpc
     

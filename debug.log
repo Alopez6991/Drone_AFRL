@@ -2,3 +2,5 @@
 2024-06-13 17:51:39,917 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
 2024-06-13 17:51:39,918 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
 2024-06-13 17:51:39,923 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+2024-06-27 09:35:19,962 [INFO] Animation.save using <class 'matplotlib.animation.FFMpegWriter'>
+2024-06-27 09:35:19,998 [INFO] MovieWriter._run: running command: ffmpeg -f rawvideo -vcodec rawvideo -s 640x480 -pix_fmt rgba -r 5.0 -loglevel error -i pipe: -vcodec h264 -pix_fmt yuv420p -y 3d_scatter_animation.mp4
