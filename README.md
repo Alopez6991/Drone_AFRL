@@ -13,7 +13,3 @@ The dynamics are defined as follows: <br />
 The input dynamics are defines as follows: <br />
 
 ![Inputs](images/inputs_black.svg) <br />
-
-
-
-# The code
