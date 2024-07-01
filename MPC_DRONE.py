@@ -26,7 +26,7 @@ import do_mpc
 from setdict import SetDict
 
 class MpcDrone:
-    def __init__(self,vx,vy,vz,psi=None,x=None,y=None,z=None,phi=None,theta=None,phidot=None,thetadot=None,psidot=None,x0=None, dt=0.01, n_horizon=20, r_weight=0.0, run=True):
+    def __init__(self,vx,vy,vz,params,psi=None,x=None,y=None,z=None,phi=None,theta=None,phidot=None,thetadot=None,psidot=None,x0=None,dt=0.01, n_horizon=20, r_weight=0.0, run=True):
     
         # Set set-point time series - seting the target values for velocity x, velocity y, velocity z, and psi(yaw/heading)
         self.vx = vx.copy()
@@ -57,18 +57,20 @@ class MpcDrone:
         
 
 
-        # Set initial state
-        m = 5.0     # mass
-        l = 0.4     # length
-        Ix = 1.0    # moment of inertia about x
-        Iy = 1.0    # moment of inertia about y
-        Iz = 1.0    # moment of inertia about z
-        Jr = 1.0    # rotor inertia
-        g = 9.81    # gravity
-        b = 1.0    # thrust constant
-        d = 1.0     # drag constant
-        Dl = 2.0     # drag from ground speed
-        Dr = 2.0     # drag from rotation
+        # Set initial setup parameters
+        self.params=params
+
+        m  = self.params[0]    # mass
+        l  = self.params[1]    # length
+        Ix = self.params[2]    # moment of inertia about x
+        Iy = self.params[3]    # moment of inertia about y
+        Iz = self.params[4]    # moment of inertia about z
+        Jr = self.params[5]    # rotor inertia
+        g  = 9.81              # gravity
+        b  = self.params[6]    # thrust constant
+        d  = self.params[7]    # drag constant
+        Dl = self.params[8]    # drag from ground speed
+        Dr = self.params[9]    # drag from rotation
         self.ui=np.sqrt((m*g)/(4*b))/10 #initial input
         print('ui:',self.ui)
 
