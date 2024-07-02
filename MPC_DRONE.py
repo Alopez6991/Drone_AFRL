@@ -72,7 +72,6 @@ class MpcDrone:
         Dl = self.params[8]    # drag from ground speed
         Dr = self.params[9]    # drag from rotation
         self.ui=np.sqrt((m*g)/(4*b))/10 #initial input
-        print('ui:',self.ui)
 
 
         self.x0 = { 'x'       : self.x[0], 
@@ -380,6 +379,13 @@ class MpcDrone:
 
         self.u_mpc = np.hstack(self.u_mpc).T
         self.x_mpc = np.hstack(self.x_mpc).T
+        return self.x_mpc, self.u_mpc
+    
+    def get_X_and_U(self):
+        return (self.x_mpc, self.u_mpc)
+    
+    def plot_states_targets_inputs(self):
+
         # make time vector based on dt and the length of the simulation
         self.t_mpc = np.arange(0, self.T + self.dt/2, self.dt)
         w=3
@@ -511,7 +517,6 @@ class MpcDrone:
         sc = ax.scatter(x, y, z, c=time)
 
        
-# Set the x, y, z limits to be the same
         max_range = np.array([x.max()-x.min(), y.max()-y.min(), z.max()-z.min()]).max() / 2.0
 
         mid_x = (x.max()+x.min()) * 0.5
@@ -519,7 +524,7 @@ class MpcDrone:
         mid_z = (z.max()+z.min()) * 0.5
         ax.set_xlim(mid_x - max_range, mid_x + max_range)
         ax.set_ylim(mid_y - max_range, mid_y + max_range)
-        ax.set_zlim(mid_z - max_range, mid_z + max_range)#     ax.quiver(x[i], y[i], z[i], dx[i], dy[i], dz[i], length=0.25, color='black')
+        ax.set_zlim(mid_z - max_range, mid_z + max_range)
 
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
@@ -531,19 +536,6 @@ class MpcDrone:
         cbar.set_label('Time')
 
         plt.show()
-
-
-        # plt.figure()
-        # plt.plot(self.t_mpc,np.array(self.u_mpc.T[0]),label='u1',color='blue',alpha=0.5,linewidth=w)
-        # plt.plot(self.t_mpc,np.array(self.u_mpc.T[1]),label='u2',color='red',alpha=0.5,linewidth=w)
-        # plt.plot(self.t_mpc,np.array(self.u_mpc.T[2]),label='u3',color='green',alpha=0.5,linewidth=w)
-        # plt.plot(self.t_mpc,np.array(self.u_mpc.T[3]),label='u4',color='purple',alpha=0.5,linewidth=w)
-        # plt.xlabel('time')
-        # plt.ylabel('$u_{1} - u_{4}$')
-        # plt.ylim([8,12])
-        # plt.legend()
-
-        return self.x_mpc, self.u_mpc
     
       
 
