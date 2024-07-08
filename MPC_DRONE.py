@@ -26,7 +26,7 @@ import do_mpc
 from setdict import SetDict
 
 class MpcDrone:
-    def __init__(self,vx,vy,vz,params,psi=None,x=None,y=None,z=None,phi=None,theta=None,phidot=None,thetadot=None,psidot=None,x0=None,dt=0.01, n_horizon=20, r_weight=0.0, run=True):
+    def __init__(self,vx,vy,vz,params,psi=None,x=None,y=None,z=None,phi=None,theta=None,phidot=None,thetadot=None,psidot=None,x0=None,U_start=None,X_start=None,dt=0.01, n_horizon=20, r_weight=0.0, run=True):
     
         # Set set-point time series - seting the target values for velocity x, velocity y, velocity z, and psi(yaw/heading)
         self.vx = vx.copy()
@@ -45,15 +45,16 @@ class MpcDrone:
 
         # Set initial state of non-set-point states
         # Initialize phi, phidot, theta, thetadot as arrays of zeros if they are not provided
-        self.x = np.array([x]) if x is not None else np.array([0.0])
-        self.y = np.array([y]) if y is not None else np.array([0.0])
-        self.z = np.array([z]) if z is not None else np.array([0.0])
-        self.phi = np.array([phi]) if phi is not None else np.array([0.0])
-        self.theta = np.array([theta]) if theta is not None else np.array([0.0])
-        self.phidot = np.array([phidot]) if phidot is not None else np.array([0.0])
-        self.thetadot = np.array([thetadot]) if thetadot is not None else np.array([0.0])
+        self.x = np.array([x[0]]) if x is not None else np.array([0.0])
+        self.y = np.array([y[0]]) if y is not None else np.array([0.0])
+        self.z = np.array([z[0]]) if z is not None else np.array([0.0])
+        self.phi = np.array([phi[0]]) if phi is not None else np.array([0.0])
+        self.theta = np.array([theta[0]]) if theta is not None else np.array([0.0])
+        self.phidot = np.array([phidot[0]]) if phidot is not None else np.array([0.0])
+        self.thetadot = np.array([thetadot[0]]) if thetadot is not None else np.array([0.0])
         # self.psidot = np.array([psidot]) if psidot is not None else np.array([0.0])
         # self.psi = np.array([psi]) if psi is not None else np.array([0.0])
+        self.x_start = X_start if X_start is not None else np.array([self.x[0],self.vx[0],self.y[0],self.vy[0],self.z[0],self.vz[0],self.phi[0],self.phidot[0],self.theta[0],self.thetadot[0],self.psi[0],self.psidot[0]])
         
 
 
@@ -72,6 +73,7 @@ class MpcDrone:
         Dl = self.params[8]    # drag from ground speed
         Dr = self.params[9]    # drag from rotation
         self.ui=np.sqrt((m*g)/(4*b))/10 #initial input
+        self.U_start = np.array([U_start]) if U_start is not None else np.array([self.ui,self.ui,self.ui,self.ui])
 
 
         self.x0 = { 'x'       : self.x[0], 
@@ -336,21 +338,23 @@ class MpcDrone:
 
     def run_mpc(self):
         #set initial state to match 1st point from set points
-        x0=np.array([self.x[0],
-                    self.vx[0],
-                    self.y[0],
-                    self.vy[0],
-                    self.z[0],
-                    self.vz[0],
-                    self.phi[0],
-                    self.phidot[0],
-                    self.theta[0],
-                    self.thetadot[0],
-                    self.psi[0],
-                    self.psidot[0]]).reshape(-1,1)
+        # x0=np.array([self.x[0],
+        #             self.vx[0],
+        #             self.y[0],
+        #             self.vy[0],
+        #             self.z[0],
+        #             self.vz[0],
+        #             self.phi[0],
+        #             self.phidot[0],
+        #             self.theta[0],
+        #             self.thetadot[0],
+        #             self.psi[0],
+        #             self.psidot[0]]).reshape(-1,1)
+
+        x0 = np.array(self.x_start).reshape(-1,1)
         
         # Initial controls are 0
-        u0 = np.array([self.ui,self.ui,self.ui,self.ui]).reshape(-1,1)
+        u0 = self.U_start.reshape(-1,1)
 
         # Set initial MPC time, state, inputs
         self.mpc.t0 = np.array(0.0)
