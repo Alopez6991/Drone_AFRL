@@ -26,7 +26,7 @@ import do_mpc
 from setdict import SetDict
 
 class MpcDrone:
-    def __init__(self,vx,vy,vz,wx,wy,wz,params,psi=None,x=None,y=None,z=None,phi=None,theta=None,phidot=None,thetadot=None,psidot=None,x0=None,U_start=None,X_start=None,dt=0.01, n_horizon=20, r_weight=0.0, run=True):
+    def __init__(self,vx,vy,z,wx,wy,wz,params,psi=None,x=None,y=None,vz=None,phi=None,theta=None,phidot=None,thetadot=None,psidot=None,x0=None,U_start=None,X_start=None,dt=0.01, n_horizon=20, r_weight=0.0, run=True):
     
         # Set set-point time series - seting the target values for velocity x, velocity y, velocity z, and psi(yaw/heading)
         self.vx = vx.copy()
@@ -35,9 +35,9 @@ class MpcDrone:
         self.vy = vy.copy()
         # print('vy:',self.vy)
         self.vy_target = vy.copy()
-        self.vz = vz.copy()
+        self.z = z.copy()
         # print('vz:',self.vz)
-        self.vz_target = vz.copy()
+        self.z_target = z.copy()
         self.psi = psi.copy()
         # print('psi:',self.psi)
         self.psi_target = psi.copy()
@@ -51,7 +51,7 @@ class MpcDrone:
         # Initialize phi, phidot, theta, thetadot as arrays of zeros if they are not provided
         self.x = np.array([x[0]]) if x is not None else np.array([0.0])
         self.y = np.array([y[0]]) if y is not None else np.array([0.0])
-        self.z = np.array([z[0]]) if z is not None else np.array([0.0])
+        self.vz = np.array([z[0]]) if vz is not None else np.array([0.0])
         self.phi = np.array([phi[0]]) if phi is not None else np.array([0.0])
         self.theta = np.array([theta[0]]) if theta is not None else np.array([0.0])
         self.phidot = np.array([phidot[0]]) if phidot is not None else np.array([0.0])
@@ -136,7 +136,7 @@ class MpcDrone:
         # define set-point variables for the MPC model
         vx_setpoint    = self.model.set_variable(var_type='_tvp', var_name='vx_setpoint')
         vy_setpoint    = self.model.set_variable(var_type='_tvp', var_name='vy_setpoint')
-        vz_setpoint    = self.model.set_variable(var_type='_tvp', var_name='vz_setpoint')
+        z_setpoint     = self.model.set_variable(var_type='_tvp', var_name='z_setpoint')
         psi_setpoint   = self.model.set_variable(var_type='_tvp', var_name='psi_setpoint')
         wx_setpoint    = self.model.set_variable(var_type='_tvp', var_name='wx_setpoint')
         wy_setpoint    = self.model.set_variable(var_type='_tvp', var_name='wy_setpoint')
@@ -275,13 +275,13 @@ class MpcDrone:
                 r_weight: weight for control penalty
         """
 
-        lterm = (self.model.x['vx'] - self.model.tvp['vx_setpoint'])**2 + \
-                (self.model.x['vy'] - self.model.tvp['vy_setpoint'])**2 + \
-                (self.model.x['vz'] - self.model.tvp['vz_setpoint'])**2 + \
+        lterm = (self.model.x['vx']  - self.model.tvp['vx_setpoint'])**2 + \
+                (self.model.x['vy']  - self.model.tvp['vy_setpoint'])**2 + \
+                (self.model.x['z']   - self.model.tvp['z_setpoint'])**2 + \
                 (self.model.x['psi'] - self.model.tvp['psi_setpoint'])**2 + \
-                (self.model.x['wx'] - self.model.tvp['wx_setpoint'])**2 + \
-                (self.model.x['wy'] - self.model.tvp['wy_setpoint'])**2 + \
-                (self.model.x['wz'] - self.model.tvp['wz_setpoint'])**2
+                (self.model.x['wx']  - self.model.tvp['wx_setpoint'])**2 + \
+                (self.model.x['wy']  - self.model.tvp['wy_setpoint'])**2 + \
+                (self.model.x['wz']  - self.model.tvp['wz_setpoint'])**2
         
 
         
@@ -309,13 +309,13 @@ class MpcDrone:
                 k_set = self.n_points - 1  # set part of horizon beyond input data to last point
 
             # Update each set-point over time horizon
-            self.mpc_tvp_template['_tvp', n, 'vx_setpoint'] = self.vx[k_set]
-            self.mpc_tvp_template['_tvp', n, 'vy_setpoint'] = self.vy[k_set]
-            self.mpc_tvp_template['_tvp', n, 'vz_setpoint'] = self.vz[k_set]
+            self.mpc_tvp_template['_tvp', n, 'vx_setpoint']  = self.vx[k_set]
+            self.mpc_tvp_template['_tvp', n, 'vy_setpoint']  = self.vy[k_set]
+            self.mpc_tvp_template['_tvp', n, 'z_setpoint']   = self.z[k_set]
             self.mpc_tvp_template['_tvp', n, 'psi_setpoint'] = self.psi[k_set]
-            self.mpc_tvp_template['_tvp', n, 'wx_setpoint'] = self.wx[k_set]
-            self.mpc_tvp_template['_tvp', n, 'wy_setpoint'] = self.wy[k_set]
-            self.mpc_tvp_template['_tvp', n, 'wz_setpoint'] = self.wz[k_set]
+            self.mpc_tvp_template['_tvp', n, 'wx_setpoint']  = self.wx[k_set]
+            self.mpc_tvp_template['_tvp', n, 'wy_setpoint']  = self.wy[k_set]
+            self.mpc_tvp_template['_tvp', n, 'wz_setpoint']  = self.wz[k_set]
 
 
         return self.mpc_tvp_template
@@ -333,13 +333,13 @@ class MpcDrone:
             k_step = self.n_points - 1  # set point beyond input data to last point
 
         # Update current set-point
-        self.simulator_tvp_template['vx_setpoint']  = self.vx[k_step]
-        self.simulator_tvp_template['vy_setpoint']  = self.vy[k_step]
-        self.simulator_tvp_template['vz_setpoint']  = self.vz[k_step]
+        self.simulator_tvp_template['vx_setpoint']   = self.vx[k_step]
+        self.simulator_tvp_template['vy_setpoint']   = self.vy[k_step]
+        self.simulator_tvp_template['z_setpoint']    = self.z[k_step]
         self.simulator_tvp_template['psi_setpoint']  = self.psi[k_step]
-        self.simulator_tvp_template['wx_setpoint']  = self.wx[k_step]
-        self.simulator_tvp_template['wy_setpoint']  = self.wy[k_step]
-        self.simulator_tvp_template['wz_setpoint']  = self.wz[k_step]
+        self.simulator_tvp_template['wx_setpoint']   = self.wx[k_step]
+        self.simulator_tvp_template['wy_setpoint']   = self.wy[k_step]
+        self.simulator_tvp_template['wz_setpoint']   = self.wz[k_step]
         
         return self.simulator_tvp_template
             
@@ -430,13 +430,13 @@ class MpcDrone:
 
         plt.figure()
         plt.plot(self.t_mpc,np.array(self.x_mpc.T[4]),label='z',color='green',alpha=0.5,linewidth=w)
+        plt.plot(self.t_mpc,self.z_target,label='z target',color='green',alpha=1,linestyle='dashed',linewidth=w)
         plt.xlabel('time')
         plt.ylabel('z_position')
         plt.legend()
 
         plt.figure()
         plt.plot(self.t_mpc,np.array(self.x_mpc.T[5]),label='vz',color='green',alpha=0.5,linewidth=w)
-        plt.plot(self.t_mpc,self.vz_target,label='vz target',color='green',alpha=1,linestyle='dashed',linewidth=w)
         plt.xlabel('time')
         plt.ylabel('z_velocity')
         plt.legend()
