@@ -395,6 +395,100 @@ class MpcDrone:
     
     def get_X_and_U(self):
         return (self.x_mpc, self.u_mpc)
+
+    def run_just_simulator(self, Xo=None, Tsim=None, Usim=None):
+        """ Run the simulator with the given initial state and control inputs.
+
+        Inputs:
+            Xo: initial state
+            Tsim: total simulation time
+            Usim: control inputs
+        """
+
+        # Use self.x_start, self.T, and self.u_mpc if the arguments are not provided
+        if Xo is None:
+            Xo = np.array(self.x_start).reshape(-1,1)
+        if Tsim is None:
+            Tsim = self.T
+        if Usim is None:
+            Usim = self.u_mpc
+
+        # Set initial state
+        self.simulator.x0 = Xo.reshape(-1, 1)
+        self.simulator.set_initial_guess()
+
+        # Initialize variables to store simulation data
+        self.xsim = [Xo]
+        # print("Xo:", Xo.shape)
+        self.usim = [Usim[0].reshape(-1, 1)]
+
+        # Run simulation
+        for k in range(1,Usim.shape[0]):
+            u_step = Usim[k].reshape(-1, 1)
+            x_step = self.simulator.make_step(u_step)
+            # print("u_step:", u_step.shape)
+            # print("x_step:", x_step.shape)
+            self.usim.append(u_step)
+            self.xsim.append(x_step)
+
+        self.usim = np.hstack(self.usim).T
+        self.xsim = np.hstack(self.xsim).T
+
+        # Return measuerments
+        # Px   = x
+        # Vx   = vx
+        # Py   = y
+        # Vy   = vy
+        # Pz   = z
+        # Vz   = vz
+        # R    = phi
+        # dR   = dphi
+        # P    = theta
+        # dP   = dtheta
+        # Yaw  = psi
+        # dYaw = dpsi
+        # Wx   = wx
+        # Wy   = wy
+        # Wz   = wz
+        # OFx  = vx/z
+        # OFy  = vy/z
+        # OFz  = vz/z
+        # Ax   = vx-wx
+        # Ay   = vy-wy
+        # Az   = vz-wz
+
+        # Given self.xsim find what the measurements should be
+        # output should be measurements=[Px,Vx,Py,Vy,Pz,Vz,R,dR,P,dP,Yaw,dYaw,Wx,Wy,Wz,OFx,OFy,OFz,Ax,Ay,Az]
+        measurements = np.zeros((self.xsim.shape[0],21))
+        for i in range(self.xsim.shape[0]):
+            measurements[i,0] = self.xsim[i,0]
+            measurements[i,1] = self.xsim[i,1]
+            measurements[i,2] = self.xsim[i,2]
+            measurements[i,3] = self.xsim[i,3]
+            measurements[i,4] = self.xsim[i,4]
+            measurements[i,5] = self.xsim[i,5]
+            measurements[i,6] = self.xsim[i,6]
+            measurements[i,7] = self.xsim[i,7]
+            measurements[i,8] = self.xsim[i,8]
+            measurements[i,9] = self.xsim[i,9]
+            measurements[i,10] = self.xsim[i,10]
+            measurements[i,11] = self.xsim[i,11]
+            measurements[i,12] = self.xsim[i,12]
+            measurements[i,13] = self.xsim[i,13]
+            measurements[i,14] = self.xsim[i,14]
+            measurements[i,15] = self.xsim[i,1]/self.xsim[i,4]
+            measurements[i,16] = self.xsim[i,3]/self.xsim[i,4]
+            measurements[i,17] = self.xsim[i,5]/self.xsim[i,4]
+            measurements[i,18] = self.xsim[i,1]-self.xsim[i,12]
+            measurements[i,19] = self.xsim[i,3]-self.xsim[i,13]
+            measurements[i,20] = self.xsim[i,5]-self.xsim[i,14]
+
+
+
+
+        return measurements
+        
+    
     
     def plot_states_targets_inputs(self):
 
