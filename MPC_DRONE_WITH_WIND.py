@@ -403,6 +403,30 @@ class MpcDrone:
             Xo: initial state
             Tsim: total simulation time
             Usim: control inputs
+
+        Outputs:
+            measurements: measurements from the simulation
+            # Px   = x
+            # Vx   = vx
+            # Py   = y
+            # Vy   = vy
+            # Pz   = z
+            # Vz   = vz
+            # R    = phi
+            # dR   = dphi
+            # P    = theta
+            # dP   = dtheta
+            # Yaw  = psi
+            # dYaw = dpsi
+            # Wx   = wx
+            # Wy   = wy
+            # Wz   = wz
+            # OFx  = vx/z
+            # OFy  = vy/z
+            # OFz  = vz/z
+            # Ax   = vx-wx
+            # Ay   = vy-wy
+            # Az   = vz-wz
         """
 
         # Use self.x_start, self.T, and self.u_mpc if the arguments are not provided
@@ -434,28 +458,7 @@ class MpcDrone:
         self.usim = np.hstack(self.usim).T
         self.xsim = np.hstack(self.xsim).T
 
-        # Return measuerments
-        # Px   = x
-        # Vx   = vx
-        # Py   = y
-        # Vy   = vy
-        # Pz   = z
-        # Vz   = vz
-        # R    = phi
-        # dR   = dphi
-        # P    = theta
-        # dP   = dtheta
-        # Yaw  = psi
-        # dYaw = dpsi
-        # Wx   = wx
-        # Wy   = wy
-        # Wz   = wz
-        # OFx  = vx/z
-        # OFy  = vy/z
-        # OFz  = vz/z
-        # Ax   = vx-wx
-        # Ay   = vy-wy
-        # Az   = vz-wz
+       
 
         # Given self.xsim find what the measurements should be
         # output should be measurements=[Px,Vx,Py,Vy,Pz,Vz,R,dR,P,dP,Yaw,dYaw,Wx,Wy,Wz,OFx,OFy,OFz,Ax,Ay,Az]
