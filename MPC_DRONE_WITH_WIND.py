@@ -77,7 +77,13 @@ class MpcDrone:
         Dl = self.params[8]    # drag from ground speed
         Dr = self.params[9]    # drag from rotation
         self.ui=np.sqrt((m*g)/(4*b))/10 #initial input
-        self.U_start = np.array([U_start]) if U_start is not None else np.array([self.ui,self.ui,self.ui,self.ui,self.ui,self.ui,self.ui])
+        self.uwix=0.0
+        self.uwiy=0.0
+        self.uwiz=0.0
+        print('uwix:',self.uwix)
+        print('uwiy:',self.uwiy)
+        print('uwiz:',self.uwiz)
+        self.U_start = np.array([U_start]) if U_start is not None else np.array([self.ui,self.ui,self.ui,self.ui,self.uwix,self.uwiy,self.uwiz])
 
 
         self.x0 = { 'x'              : self.x[0], 
@@ -203,6 +209,14 @@ class MpcDrone:
         self.mpc.bounds['lower','_u', 'u2'] = 0
         self.mpc.bounds['lower','_u', 'u3'] = 0
         self.mpc.bounds['lower','_u', 'u4'] = 0
+        self.mpc.bounds['lower','_u', 'uwx'] = 0
+        self.mpc.bounds['lower','_u', 'uwy'] = 0
+        self.mpc.bounds['lower','_u', 'uwz'] = 0
+        self.mpc.bounds['upper','_u', 'uwx'] = 0
+        self.mpc.bounds['upper','_u', 'uwy'] = 0
+        self.mpc.bounds['upper','_u', 'uwz'] = 0
+
+
 
 
         
@@ -278,10 +292,10 @@ class MpcDrone:
         lterm = (self.model.x['vx']  - self.model.tvp['vx_setpoint'])**2 + \
                 (self.model.x['vy']  - self.model.tvp['vy_setpoint'])**2 + \
                 (self.model.x['z']   - self.model.tvp['z_setpoint'])**2 + \
-                (self.model.x['psi'] - self.model.tvp['psi_setpoint'])**2 + \
-                (self.model.x['wx']  - self.model.tvp['wx_setpoint'])**2 + \
-                (self.model.x['wy']  - self.model.tvp['wy_setpoint'])**2 + \
-                (self.model.x['wz']  - self.model.tvp['wz_setpoint'])**2
+                (self.model.x['psi'] - self.model.tvp['psi_setpoint'])**2 
+                # (self.model.x['wx']  - self.model.tvp['wx_setpoint'])**2 + \
+                # (self.model.x['wy']  - self.model.tvp['wy_setpoint'])**2 + \
+                # (self.model.x['wz']  - self.model.tvp['wz_setpoint'])**2
         
 
         
@@ -290,7 +304,7 @@ class MpcDrone:
 
         # Set objective
         self.mpc.set_objective(mterm=mterm, lterm=lterm)  # objective function
-        self.mpc.set_rterm(u1=r_weight,u2=r_weight,u3=r_weight,u4=r_weight,uwx=r_weight,uwy=r_weight,uwz=r_weight)  # input penalty
+        self.mpc.set_rterm(u1=r_weight,u2=r_weight,u3=r_weight,u4=r_weight,uwx=10000.0,uwy=10000.0,uwz=10000.0)  # input penalty
 
     def mpc_tvp_function(self, t): # important
         """ Set the set-point function for MPC optimizer.
@@ -396,13 +410,14 @@ class MpcDrone:
     def get_X_and_U(self):
         return (self.x_mpc, self.u_mpc)
 
-    def run_just_simulator(self, Xo=None, Tsim=None, Usim=None):
+    def run_just_simulator(self, Xo=None, Tsim=None, Usim=None, M=None):
         """ Run the simulator with the given initial state and control inputs.
 
         Inputs:
             Xo: initial state
             Tsim: total simulation time
             Usim: control inputs
+            M: measurements that you want as a list of strings
 
         Outputs:
             measurements: measurements from the simulation
@@ -458,9 +473,7 @@ class MpcDrone:
         self.usim = np.hstack(self.usim).T
         self.xsim = np.hstack(self.xsim).T
 
-       
-
-        # Given self.xsim find what the measurements should be
+               # Given self.xsim find what the measurements should be
         # output should be measurements=[Px,Vx,Py,Vy,Pz,Vz,R,dR,P,dP,Yaw,dYaw,Wx,Wy,Wz,OFx,OFy,OFz,Ax,Ay,Az]
         measurements = np.zeros((self.xsim.shape[0],21))
         for i in range(self.xsim.shape[0]):
@@ -486,10 +499,56 @@ class MpcDrone:
             measurements[i,19] = self.xsim[i,3]-self.xsim[i,13]
             measurements[i,20] = self.xsim[i,5]-self.xsim[i,14]
 
+        # cut doen the measurements to only include the ones that are asked for in M
+        if M is not None:
+            mmm=[]
+            for i in range(len(M)):
+                if M[i]=='Px':
+                    mmm.append(measurements[:,0])
+                if M[i]=='Vx':
+                    mmm.append(measurements[:,1])
+                if M[i]=='Py':
+                    mmm.append(measurements[:,2])
+                if M[i]=='Vy':
+                    mmm.append(measurements[:,3])
+                if M[i]=='Pz':
+                    mmm.append(measurements[:,4])
+                if M[i]=='Vz':
+                    mmm.append(measurements[:,5])
+                if M[i]=='R':
+                    mmm.append(measurements[:,6])
+                if M[i]=='dR':
+                    mmm.append(measurements[:,7])
+                if M[i]=='P':
+                    mmm.append(measurements[:,8])
+                if M[i]=='dP':
+                    mmm.append(measurements[:,9])
+                if M[i]=='Yaw':
+                    mmm.append(measurements[:,10])
+                if M[i]=='dYaw':
+                    mmm.append(measurements[:,11])
+                if M[i]=='Wx':
+                    mmm.append(measurements[:,12])
+                if M[i]=='Wy':
+                    mmm.append(measurements[:,13])
+                if M[i]=='Wz':
+                    mmm.append(measurements[:,14])
+                if M[i]=='OFx':
+                    mmm.append(measurements[:,15])
+                if M[i]=='OFy':
+                    mmm.append(measurements[:,16])
+                if M[i]=='OFz':
+                    mmm.append(measurements[:,17])
+                if M[i]=='Ax':
+                    mmm.append(measurements[:,18])
+                if M[i]=='Ay':
+                    mmm.append(measurements[:,19])
+                if M[i]=='Az':
+                    mmm.append(measurements[:,20])
+        else:
+            mmm=measurements
 
-
-
-        return measurements
+        return mmm
         
     
     
