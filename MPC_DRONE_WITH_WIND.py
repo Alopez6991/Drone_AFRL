@@ -76,7 +76,7 @@ class MpcDrone:
         d  = self.params[7]    # drag constant
         Dl = self.params[8]    # drag from ground speed
         Dr = self.params[9]    # drag from rotation
-        self.ui=np.sqrt((m*g)/(4*b))/10 #initial input
+        self.ui=np.sqrt((m*g)/(4*b)) #initial input
         self.uwix=0.0
         self.uwiy=0.0
         self.uwiz=0.0
@@ -185,6 +185,24 @@ class MpcDrone:
         self.model.set_rhs('wx', uwx)
         self.model.set_rhs('wy', uwy)
         self.model.set_rhs('wz', uwz)
+
+        # # Define state equations for the MPC model simplified
+        # self.model.set_rhs('x', vx) 
+        # self.model.set_rhs('vx', (cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi))*U1/m - Dl*vrx/m)
+        # self.model.set_rhs('y', vy)
+        # self.model.set_rhs('vy', (cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi))*U1/m - Dl*vry/m)
+        # self.model.set_rhs('z', vz)
+        # self.model.set_rhs('vz', (cos(phi)*cos(theta))*U1/m - Dl*vrz/m - g)
+        # self.model.set_rhs('phi', phidot)
+        # self.model.set_rhs('phidot', U2*l/Ix - phidot*Dr/Ix)
+        # self.model.set_rhs('theta', thetadot)
+        # self.model.set_rhs('thetadot', U3*l/Iy - thetadot*Dr/Iy)
+        # self.model.set_rhs('psi', psidot)
+        # self.model.set_rhs('psidot', U4/Iz - psidot*Dr/Iz)
+        # self.model.set_rhs('wx', uwx)
+        # self.model.set_rhs('wy', uwy)
+        # self.model.set_rhs('wz', uwz)
+
 
 
 
@@ -421,32 +439,11 @@ class MpcDrone:
 
         Outputs:
             measurements: measurements from the simulation
-            # Px   = x
-            # Vx   = vx
-            # Py   = y
-            # Vy   = vy
-            # Pz   = z
-            # Vz   = vz
-            # R    = phi
-            # dR   = dphi
-            # P    = theta
-            # dP   = dtheta
-            # Yaw  = psi
-            # dYaw = dpsi
-            # Wx   = wx
-            # Wy   = wy
-            # Wz   = wz
-            # OFx  = vx/z
-            # OFy  = vy/z
-            # OFz  = vz/z
-            # Ax   = vx-wx
-            # Ay   = vy-wy
-            # Az   = vz-wz
         """
 
         # Use self.x_start, self.T, and self.u_mpc if the arguments are not provided
         if Xo is None:
-            Xo = np.array(self.x_start).reshape(-1,1)
+            Xo = np.array(self.x_start).reshape(-1, 1)
         if Tsim is None:
             Tsim = self.T
         if Usim is None:
@@ -458,97 +455,52 @@ class MpcDrone:
 
         # Initialize variables to store simulation data
         self.xsim = [Xo]
-        # print("Xo:", Xo.shape)
         self.usim = [Usim[0].reshape(-1, 1)]
 
         # Run simulation
-        for k in range(1,Usim.shape[0]):
+        for k in range(1, Usim.shape[0]):
             u_step = Usim[k].reshape(-1, 1)
             x_step = self.simulator.make_step(u_step)
-            # print("u_step:", u_step.shape)
-            # print("x_step:", x_step.shape)
             self.usim.append(u_step)
             self.xsim.append(x_step)
 
         self.usim = np.hstack(self.usim).T
         self.xsim = np.hstack(self.xsim).T
 
-               # Given self.xsim find what the measurements should be
-        # output should be measurements=[Px,Vx,Py,Vy,Pz,Vz,R,dR,P,dP,Yaw,dYaw,Wx,Wy,Wz,OFx,OFy,OFz,Ax,Ay,Az]
-        measurements = np.zeros((self.xsim.shape[0],21))
-        for i in range(self.xsim.shape[0]):
-            measurements[i,0] = self.xsim[i,0]
-            measurements[i,1] = self.xsim[i,1]
-            measurements[i,2] = self.xsim[i,2]
-            measurements[i,3] = self.xsim[i,3]
-            measurements[i,4] = self.xsim[i,4]
-            measurements[i,5] = self.xsim[i,5]
-            measurements[i,6] = self.xsim[i,6]
-            measurements[i,7] = self.xsim[i,7]
-            measurements[i,8] = self.xsim[i,8]
-            measurements[i,9] = self.xsim[i,9]
-            measurements[i,10] = self.xsim[i,10]
-            measurements[i,11] = self.xsim[i,11]
-            measurements[i,12] = self.xsim[i,12]
-            measurements[i,13] = self.xsim[i,13]
-            measurements[i,14] = self.xsim[i,14]
-            measurements[i,15] = self.xsim[i,1]/self.xsim[i,4]
-            measurements[i,16] = self.xsim[i,3]/self.xsim[i,4]
-            measurements[i,17] = self.xsim[i,5]/self.xsim[i,4]
-            measurements[i,18] = self.xsim[i,1]-self.xsim[i,12]
-            measurements[i,19] = self.xsim[i,3]-self.xsim[i,13]
-            measurements[i,20] = self.xsim[i,5]-self.xsim[i,14]
+        # Preallocate the measurements array
+        measurements = np.zeros((self.xsim.shape[0], 21))
+        
+        # Fill the measurements array using array slicing
+        measurements[:, :15] = self.xsim[:, :15]  # Px, Vx, Py, Vy, Pz, Vz, R, dR, P, dP, Yaw, dYaw, Wx, Wy, Wz
+        
+        # Handle division-by-zero issues for OFx, OFy, and OFz with explicit float `0.0`
+        measurements[:, 15] = np.where(self.xsim[:, 4] != 0, self.xsim[:, 1] / self.xsim[:, 4], 0.0)  # OFx = Vx / Pz
+        measurements[:, 16] = np.where(self.xsim[:, 4] != 0, self.xsim[:, 3] / self.xsim[:, 4], 0.0)  # OFy = Vy / Pz
+        measurements[:, 17] = np.where(self.xsim[:, 4] != 0, self.xsim[:, 5] / self.xsim[:, 4], 0.0)  # OFz = Vz / Pz
+        
+        # Ax, Ay, Az don't involve division, so no change is needed
+        measurements[:, 18] = self.xsim[:, 1] - self.xsim[:, 12]  # Ax = Vx - Wx
+        measurements[:, 19] = self.xsim[:, 3] - self.xsim[:, 13]  # Ay = Vy - Wy
+        measurements[:, 20] = self.xsim[:, 5] - self.xsim[:, 14]  # Az = Vz - Wz
 
-        # cut doen the measurements to only include the ones that are asked for in M
+        # If M is provided, filter the measurements
         if M is not None:
-            mmm=[]
-            for i in range(len(M)):
-                if M[i]=='Px':
-                    mmm.append(measurements[:,0])
-                if M[i]=='Vx':
-                    mmm.append(measurements[:,1])
-                if M[i]=='Py':
-                    mmm.append(measurements[:,2])
-                if M[i]=='Vy':
-                    mmm.append(measurements[:,3])
-                if M[i]=='Pz':
-                    mmm.append(measurements[:,4])
-                if M[i]=='Vz':
-                    mmm.append(measurements[:,5])
-                if M[i]=='R':
-                    mmm.append(measurements[:,6])
-                if M[i]=='dR':
-                    mmm.append(measurements[:,7])
-                if M[i]=='P':
-                    mmm.append(measurements[:,8])
-                if M[i]=='dP':
-                    mmm.append(measurements[:,9])
-                if M[i]=='Yaw':
-                    mmm.append(measurements[:,10])
-                if M[i]=='dYaw':
-                    mmm.append(measurements[:,11])
-                if M[i]=='Wx':
-                    mmm.append(measurements[:,12])
-                if M[i]=='Wy':
-                    mmm.append(measurements[:,13])
-                if M[i]=='Wz':
-                    mmm.append(measurements[:,14])
-                if M[i]=='OFx':
-                    mmm.append(measurements[:,15])
-                if M[i]=='OFy':
-                    mmm.append(measurements[:,16])
-                if M[i]=='OFz':
-                    mmm.append(measurements[:,17])
-                if M[i]=='Ax':
-                    mmm.append(measurements[:,18])
-                if M[i]=='Ay':
-                    mmm.append(measurements[:,19])
-                if M[i]=='Az':
-                    mmm.append(measurements[:,20])
+            # Map the variable names to their respective columns in measurements
+            measurement_map = {
+                'Px': 0, 'Vx': 1, 'Py': 2, 'Vy': 3, 'Pz': 4, 'Vz': 5,
+                'R': 6, 'dR': 7, 'P': 8, 'dP': 9, 'Yaw': 10, 'dYaw': 11,
+                'Wx': 12, 'Wy': 13, 'Wz': 14, 'OFx': 15, 'OFy': 16, 'OFz': 17,
+                'Ax': 18, 'Ay': 19, 'Az': 20
+            }
+
+            # Stack the selected columns into a single 2D numpy array
+            mmm = np.column_stack([measurements[:, measurement_map[key]] for key in M])
         else:
-            mmm=measurements
+            mmm = measurements
 
         return mmm
+
+
         
     
     
