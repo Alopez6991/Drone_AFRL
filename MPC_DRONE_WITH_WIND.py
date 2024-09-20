@@ -468,7 +468,7 @@ class MpcDrone:
         self.xsim = np.hstack(self.xsim).T
 
         # Preallocate the measurements array
-        measurements = np.zeros((self.xsim.shape[0], 21))
+        measurements = np.zeros((self.xsim.shape[0], 24))
         
         # Fill the measurements array using array slicing
         measurements[:, :15] = self.xsim[:, :15]  # Px, Vx, Py, Vy, Pz, Vz, R, dR, P, dP, Yaw, dYaw, Wx, Wy, Wz
@@ -482,6 +482,20 @@ class MpcDrone:
         measurements[:, 18] = self.xsim[:, 1] + self.xsim[:, 12]  # Ax = Vx + Wx
         measurements[:, 19] = self.xsim[:, 3] + self.xsim[:, 13]  # Ay = Vy + Wy
         measurements[:, 20] = self.xsim[:, 5] + self.xsim[:, 14]  # Az = Vz + Wz
+        
+        # add linear_acceleration measurements
+        # get U1, U2, U3, U4
+        U1 = self.params[6] * (self.usim[:, 0]**2 + self.usim[:, 1]**2 + self.usim[:, 2]**2 + self.usim[:, 3]**2)
+        U2 = self.params[6] * (self.usim[:, 3]**2 + self.usim[:, 0]**2 - self.usim[:, 1]**2 - self.usim[:, 2]**2)
+        U3 = self.params[6] * (self.usim[:, 2]**2 + self.usim[:, 3]**2 - self.usim[:, 0]**2 - self.usim[:, 1]**2)
+        U4 = self.params[7] * (-self.usim[:, 0]**2 + self.usim[:, 1]**2 - self.usim[:, 2]**2 + self.usim[:, 3]**2)
+        # acc_x =(cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi))*U1/m - Dl*vrx/m
+        measurements[:, 21] = (np.cos(self.xsim[:, 6])*np.sin(self.xsim[:, 8])*np.cos(self.xsim[:, 10]) + np.sin(self.xsim[:, 6])*np.sin(self.xsim[:, 10]))*U1/self.params[0] - self.params[8]*(self.xsim[:, 1] + self.xsim[:, 12])/self.params[0]
+        # acc_y =(cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi))*U1/m - Dl*vry/m
+        measurements[:, 22] = (np.cos(self.xsim[:, 6])*np.sin(self.xsim[:, 8])*np.sin(self.xsim[:, 10]) - np.sin(self.xsim[:, 6])*np.cos(self.xsim[:, 10]))*U1/self.params[0] - self.params[8]*(self.xsim[:, 3] + self.xsim[:, 13])/self.params[0]
+        # acc_z =(cos(phi)*cos(theta))*U1/m - Dl*vrz/m - g
+        measurements[:, 23] = (np.cos(self.xsim[:, 6])*np.cos(self.xsim[:, 8]))*U1/self.params[0] - self.params[8]*(self.xsim[:, 5] + self.xsim[:, 14])/self.params[0] - 9.81
+
 
         # If M is provided, filter the measurements
         if M is not None:
@@ -490,7 +504,7 @@ class MpcDrone:
                 'Px': 0, 'Vx': 1, 'Py': 2, 'Vy': 3, 'Pz': 4, 'Vz': 5,
                 'R': 6, 'dR': 7, 'P': 8, 'dP': 9, 'Yaw': 10, 'dYaw': 11,
                 'Wx': 12, 'Wy': 13, 'Wz': 14, 'OFx': 15, 'OFy': 16, 'OFz': 17,
-                'Ax': 18, 'Ay': 19, 'Az': 20
+                'Ax': 18, 'Ay': 19, 'Az': 20, 'acc_x': 21, 'acc_y': 22, 'acc_z': 23
             }
 
             # Stack the selected columns into a single 2D numpy array
