@@ -165,9 +165,9 @@ class MpcDrone:
         omega=u2+u4-u1-u3
 
         # define drag dynamics
-        vrx = vx - wx
-        vry = vy - wy
-        vrz = vz - wz
+        vrx = vx + wx
+        vry = vy + wy
+        vrz = vz + wz
 
         # Define state equations for the MPC model
         self.model.set_rhs('x', vx) 
@@ -479,9 +479,9 @@ class MpcDrone:
         measurements[:, 17] = np.where(self.xsim[:, 4] != 0, self.xsim[:, 5] / self.xsim[:, 4], 0.0)  # OFz = Vz / Pz
         
         # Ax, Ay, Az don't involve division, so no change is needed
-        measurements[:, 18] = self.xsim[:, 1] - self.xsim[:, 12]  # Ax = Vx - Wx
-        measurements[:, 19] = self.xsim[:, 3] - self.xsim[:, 13]  # Ay = Vy - Wy
-        measurements[:, 20] = self.xsim[:, 5] - self.xsim[:, 14]  # Az = Vz - Wz
+        measurements[:, 18] = self.xsim[:, 1] + self.xsim[:, 12]  # Ax = Vx + Wx
+        measurements[:, 19] = self.xsim[:, 3] + self.xsim[:, 13]  # Ay = Vy + Wy
+        measurements[:, 20] = self.xsim[:, 5] + self.xsim[:, 14]  # Az = Vz + Wz
 
         # If M is provided, filter the measurements
         if M is not None:
