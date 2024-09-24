@@ -47,16 +47,22 @@ def __extended_kalman_forward_update__(xhat_fm, P_fm, y, u, A, B, C, D, R, Q, h,
 
     I = np.array(np.eye(A.shape[0]))
     gammaW = np.array(np.eye(A.shape[0]))
+    # print('`C:',C)
+    # print('p:',P_fm)
+    # print('R:',R)
 
     K_f = P_fm@C.T@np.linalg.inv(C@P_fm@C.T + R)
+    # K_f=np.zeros_like(K_f)
 
     #xhat_fp = xhat_fm + K_f@(y - (C@xhat_fm+D@u))
     xhat_fp = xhat_fm + K_f@(y - h(xhat_fm, u))
+    # xhat_fp = xhat_fm
     
     #xhat_fm = A@xhat_fp + B@u
     xhat_fm = f(xhat_fp, u)
 
     P_fp = (I - K_f@C)@P_fm
+    # P_fp = (I)@P_fm
     P_fm = A@P_fp@A.T + gammaW@Q@gammaW.T
 
     return xhat_fp, xhat_fm, P_fp, P_fm
@@ -85,6 +91,7 @@ def ekf(y, x0, f, h, Q, R, u, P0=None):
         
         A, B = jacobian(f, np.ravel(xhat_fm[:, -1:]), np.ravel(u[:, i:i+1]))
         C, D = jacobian(h, np.ravel(xhat_fm[:, -1:]), np.ravel(u[:, i:i+1]))
+        
 
         _xhat_fp, _xhat_fm, _P_fp, _P_fm = __extended_kalman_forward_update__(xhat_fm[:, -1:], P_fm[-1], y[:, i:i+1], u[:, i:i+1],
                                                                               A, B, C, D, R, Q, h, f)
