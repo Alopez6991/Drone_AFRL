@@ -158,11 +158,17 @@ class MpcDrone:
         uwz  = self.model.set_variable(var_type='_u', var_name='uwz')
 
         # define input dynamics
-        U1 = b * (u1**2 + u2**2 + u3**2 + u4**2)
-        U2 = b * (u4**2+u1**2 - u2**2-u3**2)
-        U3 = b * (u3**2+u4**2 - u1**2-u2**2)
-        U4 = d * (-u1**2 + u2**2 - u3**2 + u4**2)
-        omega=u2+u4-u1-u3
+        # U1 = b * (u1**2 + u2**2 + u3**2 + u4**2)
+        # U2 = b * (u4**2+u1**2 - u2**2-u3**2)
+        # U3 = b * (u3**2+u4**2 - u1**2-u2**2)
+        # U4 = d * (-u1**2 + u2**2 - u3**2 + u4**2)
+        # omega=u2+u4-u1-u3
+
+        U1 = b * ( u1**2 + u2**2 + u3**2 + u4**2)
+        U2 = b * (-u1**2 + u2**2 + u3**2 - u4**2)
+        U3 = b * (-u1**2 + u2**2 - u3**2 + u4**2)
+        U4 = d * (-u1**2 - u2**2 + u3**2 + u4**2)
+        omega=u1+u2-u3-u4
 
         # define drag dynamics
         vrx = vx + wx
@@ -485,10 +491,14 @@ class MpcDrone:
         
         # add linear_acceleration measurements
         # get U1, U2, U3, U4
+        # U1 = self.params[6] * (self.usim[:, 0]**2 + self.usim[:, 1]**2 + self.usim[:, 2]**2 + self.usim[:, 3]**2)
+        # U2 = self.params[6] * (self.usim[:, 3]**2 + self.usim[:, 0]**2 - self.usim[:, 1]**2 - self.usim[:, 2]**2)
+        # U3 = self.params[6] * (self.usim[:, 2]**2 + self.usim[:, 3]**2 - self.usim[:, 0]**2 - self.usim[:, 1]**2)
+        # U4 = self.params[7] * (-self.usim[:, 0]**2 + self.usim[:, 1]**2 - self.usim[:, 2]**2 + self.usim[:, 3]**2)
         U1 = self.params[6] * (self.usim[:, 0]**2 + self.usim[:, 1]**2 + self.usim[:, 2]**2 + self.usim[:, 3]**2)
-        U2 = self.params[6] * (self.usim[:, 3]**2 + self.usim[:, 0]**2 - self.usim[:, 1]**2 - self.usim[:, 2]**2)
-        U3 = self.params[6] * (self.usim[:, 2]**2 + self.usim[:, 3]**2 - self.usim[:, 0]**2 - self.usim[:, 1]**2)
-        U4 = self.params[7] * (-self.usim[:, 0]**2 + self.usim[:, 1]**2 - self.usim[:, 2]**2 + self.usim[:, 3]**2)
+        U2 = self.params[6] * (-self.usim[:, 0]**2 + self.usim[:, 1]**2 + self.usim[:, 2]**2 - self.usim[:, 3]**2)
+        U3 = self.params[6] * (-self.usim[:, 0]**2 + self.usim[:, 1]**2 - self.usim[:, 2]**2 + self.usim[:, 3]**2)
+        U4 = self.params[7] * (-self.usim[:, 0]**2 - self.usim[:, 1]**2 + self.usim[:, 2]**2 + self.usim[:, 3]**2)
         # acc_x =(cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi))*U1/m - Dl*vrx/m
         measurements[:, 21] = (np.cos(self.xsim[:, 6])*np.sin(self.xsim[:, 8])*np.cos(self.xsim[:, 10]) + np.sin(self.xsim[:, 6])*np.sin(self.xsim[:, 10]))*U1/self.params[0] - self.params[8]*(self.xsim[:, 1] + self.xsim[:, 12])/self.params[0]
         # acc_y =(cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi))*U1/m - Dl*vry/m
