@@ -174,6 +174,8 @@ class MpcDrone:
         vrx = vx + wx
         vry = vy + wy
         vrz = vz + wz
+        TR= .6
+        TP = .2
 
         # Define state equations for the MPC model
         self.model.set_rhs('x', vx) 
@@ -183,9 +185,9 @@ class MpcDrone:
         self.model.set_rhs('z', vz)
         self.model.set_rhs('vz', (cos(phi)*cos(theta))*U1/m - Dl*vrz/m - g)
         self.model.set_rhs('phi', phidot)
-        self.model.set_rhs('phidot', thetadot*psidot*(Iy-Iz)/(Ix)-Jr*thetadot*omega/Ix+U2*l/Ix - phidot*Dr/Ix)
+        self.model.set_rhs('phidot', thetadot*psidot*(Iy-Iz)/(Ix)-Jr*thetadot*omega/Ix+U2*l/Ix - phidot*Dr/Ix+ TR/Ix) 
         self.model.set_rhs('theta', thetadot)
-        self.model.set_rhs('thetadot', phidot*psidot*(Iz-Ix)/(Iy)+Jr*phidot*omega/Iy+U3*l/Iy - thetadot*Dr/Iy)
+        self.model.set_rhs('thetadot', phidot*psidot*(Iz-Ix)/(Iy)+Jr*phidot*omega/Iy+U3*l/Iy - thetadot*Dr/Iy+ TP/Iy) 
         self.model.set_rhs('psi', psidot)
         self.model.set_rhs('psidot', phidot*thetadot*(Ix-Iy)/(Iz)+U4/Iz - psidot*Dr/Iz)
         self.model.set_rhs('wx', uwx)

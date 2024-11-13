@@ -99,3 +99,21 @@
 2024-09-24 18:55:59,124 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
 2024-09-24 19:40:53,104 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
 2024-09-30 12:52:48,359 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+2024-11-04 18:39:56,373 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-04 18:40:54,265 [WARNING] Animation size has reached 20989573 bytes, exceeding the limit of 20971520.0. If you're sure you want a larger animation embedded, set the animation.embed_limit rc parameter to a larger value (in MB). This and further frames will be dropped.
+2024-11-04 18:46:15,824 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-04 18:48:30,247 [WARNING] Animation size has reached 52456333 bytes, exceeding the limit of 52428800.0. If you're sure you want a larger animation embedded, set the animation.embed_limit rc parameter to a larger value (in MB). This and further frames will be dropped.
+2024-11-04 18:50:57,976 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-04 19:05:26,115 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-04 19:25:40,806 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-04 19:27:55,201 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-04 19:46:41,545 [WARNING] Animation size has reached 419700676 bytes, exceeding the limit of 419430400.0. If you're sure you want a larger animation embedded, set the animation.embed_limit rc parameter to a larger value (in MB). This and further frames will be dropped.
+2024-11-04 20:36:48,182 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-04 20:38:51,156 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-04 20:46:43,074 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-04 20:52:39,239 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-04 20:56:32,889 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-05 12:04:46,590 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-05 12:13:04,942 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-05 17:09:55,800 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
+2024-11-06 11:30:47,308 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
