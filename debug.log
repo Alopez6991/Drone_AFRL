@@ -117,3 +117,6 @@
 2024-11-05 12:13:04,942 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
 2024-11-05 17:09:55,800 [INFO] Animation.save using <class 'matplotlib.animation.HTMLWriter'>
 2024-11-06 11:30:47,308 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+2024-11-13 15:29:59,216 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+2024-11-13 17:04:28,946 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+2024-11-13 17:29:11,100 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
