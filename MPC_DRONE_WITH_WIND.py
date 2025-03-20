@@ -26,7 +26,7 @@ import do_mpc
 from setdict import SetDict
 
 class MpcDrone:
-    def __init__(self,vx,vy,z,wx,wy,wz,params,psi=None,x=None,y=None,vz=None,phi=None,theta=None,phidot=None,thetadot=None,psidot=None,x0=None,U_start=None,X_start=None,dt=0.01, n_horizon=20, r_weight=0.0, run=True):
+    def __init__(self,vx,vy,z,wx,wy,wz,psi,params,x=None,y=None,vz=None,phi=None,theta=None,phidot=None,thetadot=None,psidot=None,x0=None,U_start=None,X_start=None,dt=0.01, n_horizon=20, r_weight=0.0, run=True):
     
         # Set set-point time series - seting the target values for velocity x, velocity y, velocity z, and psi(yaw/heading)
         self.vx = vx.copy()
@@ -149,26 +149,26 @@ class MpcDrone:
         wz_setpoint    = self.model.set_variable(var_type='_tvp', var_name='wz_setpoint')
 
         # define control variables for the MPC model
-        u1   = self.model.set_variable(var_type='_u', var_name='u1')
-        u2   = self.model.set_variable(var_type='_u', var_name='u2')
-        u3   = self.model.set_variable(var_type='_u', var_name='u3')
-        u4   = self.model.set_variable(var_type='_u', var_name='u4')
+        omega1   = self.model.set_variable(var_type='_u', var_name='omega1')
+        omega2   = self.model.set_variable(var_type='_u', var_name='omega2')
+        omega3   = self.model.set_variable(var_type='_u', var_name='omega3')
+        omega3   = self.model.set_variable(var_type='_u', var_name='omega3')
         uwx  = self.model.set_variable(var_type='_u', var_name='uwx')
         uwy  = self.model.set_variable(var_type='_u', var_name='uwy')
         uwz  = self.model.set_variable(var_type='_u', var_name='uwz')
 
         # define input dynamics
-        # U1 = b * (u1**2 + u2**2 + u3**2 + u4**2)
-        # U2 = b * (u4**2+u1**2 - u2**2-u3**2)
-        # U3 = b * (u3**2+u4**2 - u1**2-u2**2)
-        # U4 = d * (-u1**2 + u2**2 - u3**2 + u4**2)
-        # omega=u2+u4-u1-u3
+        # U1 = b * (omega1**2 + omega2**2 + omega3**2 + omega3**2)
+        # U2 = b * (omega3**2+omega1**2 - omega2**2-omega3**2)
+        # U3 = b * (omega3**2+omega3**2 - omega1**2-omega2**2)
+        # U4 = d * (-omega1**2 + omega2**2 - omega3**2 + omega3**2)
+        # omega=omega2+omega3-omega1-omega3
 
-        U1 = b * ( u1**2 + u2**2 + u3**2 + u4**2)
-        U2 = b * (-u1**2 + u2**2 + u3**2 - u4**2)
-        U3 = b * (-u1**2 + u2**2 - u3**2 + u4**2)
-        U4 = d * (-u1**2 - u2**2 + u3**2 + u4**2)
-        omega=u1+u2-u3-u4
+        U1 = b * ( omega1**2 + omega2**2 + omega3**2 + omega3**2)
+        U2 = b * (-omega1**2 + omega2**2 + omega3**2 - omega3**2)
+        U3 = b * (-omega1**2 + omega2**2 - omega3**2 + omega3**2)
+        U4 = d * (-omega1**2 - omega2**2 + omega3**2 + omega3**2)
+        omega=-omega1-omega2+omega3+omega3
 
         # define drag dynamics
         vrx = vx + wx
@@ -231,10 +231,10 @@ class MpcDrone:
         self.mpc.bounds['upper','_x', 'psi'] = np.pi
 
         # Set bounds on control inputs
-        self.mpc.bounds['lower','_u', 'u1'] = 0
-        self.mpc.bounds['lower','_u', 'u2'] = 0
-        self.mpc.bounds['lower','_u', 'u3'] = 0
-        self.mpc.bounds['lower','_u', 'u4'] = 0
+        self.mpc.bounds['lower','_u', 'omega1'] = 0
+        self.mpc.bounds['lower','_u', 'omega2'] = 0
+        self.mpc.bounds['lower','_u', 'omega3'] = 0
+        self.mpc.bounds['lower','_u', 'omega3'] = 0
         self.mpc.bounds['lower','_u', 'uwx'] = 0
         self.mpc.bounds['lower','_u', 'uwy'] = 0
         self.mpc.bounds['lower','_u', 'uwz'] = 0
@@ -313,12 +313,12 @@ class MpcDrone:
 
             Inputs:
                 r_weight: weight for control penalty
-        """
-
-        lterm = (self.model.x['vx']  - self.model.tvp['vx_setpoint'])**2 + \
-                (self.model.x['vy']  - self.model.tvp['vy_setpoint'])**2 + \
-                (self.model.x['z']   - self.model.tvp['z_setpoint'])**2 + \
-                (self.model.x['psi'] - self.model.tvp['psi_setpoint'])**2 
+        # """
+# 
+        lterm = 0.0*(self.model.x['vx']  - self.model.tvp['vx_setpoint'])**2 + \
+                0.0*(self.model.x['vy']  - self.model.tvp['vy_setpoint'])**2 + \
+                0.0*(self.model.x['z']   - self.model.tvp['z_setpoint'])**2 + \
+                0.0*(self.model.x['psi'] - self.model.tvp['psi_setpoint'])**2 
                 # (self.model.x['wx']  - self.model.tvp['wx_setpoint'])**2 + \
                 # (self.model.x['wy']  - self.model.tvp['wy_setpoint'])**2 + \
                 # (self.model.x['wz']  - self.model.tvp['wz_setpoint'])**2
@@ -330,7 +330,7 @@ class MpcDrone:
 
         # Set objective
         self.mpc.set_objective(mterm=mterm, lterm=lterm)  # objective function
-        self.mpc.set_rterm(u1=r_weight,u2=r_weight,u3=r_weight,u4=r_weight,uwx=10000.0,uwy=10000.0,uwz=10000.0)  # input penalty
+        self.mpc.set_rterm(omega1=r_weight,omega2=r_weight,omega3=r_weight,omega3=r_weight,uwx=10000.0,uwy=10000.0,uwz=10000.0)  # input penalty
 
     def mpc_tvp_function(self, t): # important
         """ Set the set-point function for MPC optimizer.
@@ -634,27 +634,27 @@ class MpcDrone:
         plt.legend()
 
         plt.figure()
-        plt.plot(self.t_mpc,np.array(self.u_mpc.T[0]),label='u1',color='blue',alpha=0.5,linewidth=w)
+        plt.plot(self.t_mpc,np.array(self.u_mpc.T[0]),label='omega1',color='blue',alpha=0.5,linewidth=w)
         plt.xlabel('time')
-        plt.ylabel('u1')
+        plt.ylabel('omega1')
         plt.legend()
 
         plt.figure()
-        plt.plot(self.t_mpc,np.array(self.u_mpc.T[1]),label='u2',color='red',alpha=0.5,linewidth=w)
+        plt.plot(self.t_mpc,np.array(self.u_mpc.T[1]),label='omega2',color='red',alpha=0.5,linewidth=w)
         plt.xlabel('time')
-        plt.ylabel('u2')
+        plt.ylabel('omega2')
         plt.legend()
 
         plt.figure()
-        plt.plot(self.t_mpc,np.array(self.u_mpc.T[2]),label='u3',color='green',alpha=0.5,linewidth=w)
+        plt.plot(self.t_mpc,np.array(self.u_mpc.T[2]),label='omega3',color='green',alpha=0.5,linewidth=w)
         plt.xlabel('time')
-        plt.ylabel('u3')
+        plt.ylabel('omega3')
         plt.legend()
 
         plt.figure()
-        plt.plot(self.t_mpc,np.array(self.u_mpc.T[3]),label='u4',color='purple',alpha=0.5,linewidth=w)
+        plt.plot(self.t_mpc,np.array(self.u_mpc.T[3]),label='omega3',color='purple',alpha=0.5,linewidth=w)
         plt.xlabel('time')
-        plt.ylabel('u4')
+        plt.ylabel('omega3')
         plt.legend()
 
         plt.figure()
@@ -727,3 +727,4 @@ class MpcDrone:
 
 
 print('MPC_DRONE_WITH_WIND.py imported successfully!')
+print('test')

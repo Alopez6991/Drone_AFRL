@@ -120,3 +120,98 @@
 2024-11-13 15:29:59,216 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
 2024-11-13 17:04:28,946 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
 2024-11-13 17:29:11,100 [WARNING] No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+2025-01-29 17:12:47,315 [INFO] Import Error.
+Could not import cvxpy.
+To use convex total variation regularized derivatives, install cvxpy (http://www.cvxpy.org/install/index.html)
+ Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/
+Despite this error, you can still use the iterative TVR method.
+
+2025-01-29 17:12:47,326 [INFO] Import Error
+Could not import cvxpy.
+Install cvxpy (http://www.cvxpy.org/install/index.html) to use lineardiff.
+Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/ 
+
+2025-01-29 17:12:47,327 [INFO] Import Error
+Despite these import errors, you can still use many of the methods without additional installations.
+
+2025-01-30 10:57:39,487 [INFO] Import Error.
+Could not import cvxpy.
+To use convex total variation regularized derivatives, install cvxpy (http://www.cvxpy.org/install/index.html)
+ Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/
+Despite this error, you can still use the iterative TVR method.
+
+2025-01-30 10:57:39,500 [INFO] Import Error
+Could not import cvxpy.
+Install cvxpy (http://www.cvxpy.org/install/index.html) to use lineardiff.
+Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/ 
+
+2025-01-30 10:57:39,502 [INFO] Import Error
+Despite these import errors, you can still use many of the methods without additional installations.
+
+2025-01-30 12:45:25,619 [INFO] Import Error.
+Could not import cvxpy.
+To use convex total variation regularized derivatives, install cvxpy (http://www.cvxpy.org/install/index.html)
+ Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/
+Despite this error, you can still use the iterative TVR method.
+
+2025-01-30 12:45:25,631 [INFO] Import Error
+Could not import cvxpy.
+Install cvxpy (http://www.cvxpy.org/install/index.html) to use lineardiff.
+Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/ 
+
+2025-01-30 12:45:25,633 [INFO] Import Error
+Despite these import errors, you can still use many of the methods without additional installations.
+
+2025-01-30 14:01:55,268 [WARNING] No handles with labels found to put in legend.
+2025-01-30 14:28:04,480 [WARNING] No handles with labels found to put in legend.
+2025-01-30 14:46:44,148 [WARNING] No handles with labels found to put in legend.
+2025-01-30 15:11:39,534 [WARNING] No handles with labels found to put in legend.
+2025-01-30 15:22:23,695 [WARNING] No handles with labels found to put in legend.
+2025-01-30 17:32:33,797 [WARNING] No handles with labels found to put in legend.
+2025-01-30 18:31:16,371 [INFO] Import Error.
+Could not import cvxpy.
+To use convex total variation regularized derivatives, install cvxpy (http://www.cvxpy.org/install/index.html)
+ Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/
+Despite this error, you can still use the iterative TVR method.
+
+2025-01-30 18:31:16,390 [INFO] Import Error
+Could not import cvxpy.
+Install cvxpy (http://www.cvxpy.org/install/index.html) to use lineardiff.
+Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/ 
+
+2025-01-30 18:31:16,392 [INFO] Import Error
+Despite these import errors, you can still use many of the methods without additional installations.
+
+2025-01-30 18:36:42,130 [WARNING] No handles with labels found to put in legend.
+2025-01-30 18:55:32,869 [WARNING] No handles with labels found to put in legend.
+2025-01-31 15:45:27,867 [INFO] Import Error.
+Could not import cvxpy.
+To use convex total variation regularized derivatives, install cvxpy (http://www.cvxpy.org/install/index.html)
+ Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/
+Despite this error, you can still use the iterative TVR method.
+
+2025-01-31 15:45:27,879 [INFO] Import Error
+Could not import cvxpy.
+Install cvxpy (http://www.cvxpy.org/install/index.html) to use lineardiff.
+Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/ 
+
+2025-01-31 15:45:27,880 [INFO] Import Error
+Despite these import errors, you can still use many of the methods without additional installations.
+
+2025-01-31 16:09:15,064 [WARNING] No handles with labels found to put in legend.
+2025-01-31 16:14:45,431 [INFO] Import Error.
+Could not import cvxpy.
+To use convex total variation regularized derivatives, install cvxpy (http://www.cvxpy.org/install/index.html)
+ Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/
+Despite this error, you can still use the iterative TVR method.
+
+2025-01-31 16:14:45,439 [INFO] Import Error
+Could not import cvxpy.
+Install cvxpy (http://www.cvxpy.org/install/index.html) to use lineardiff.
+Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/ 
+
+2025-01-31 16:14:45,440 [INFO] Import Error
+Despite these import errors, you can still use many of the methods without additional installations.
+
+2025-01-31 16:22:28,244 [WARNING] No handles with labels found to put in legend.
+2025-01-31 16:28:40,714 [WARNING] No handles with labels found to put in legend.
