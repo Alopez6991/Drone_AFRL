@@ -48,9 +48,10 @@ def __extended_kalman_forward_update__(xhat_fm, P_fm, y, u, A, B, C, D, R, Q, h,
     I = np.array(np.eye(A.shape[0]))
     gammaW = np.array(np.eye(A.shape[0]))
     # Print the shapes of the matrices
-    # print("P_fm shape:", P_fm.shape)
-    # print("C shape:", C.shape)
-    # print("R shape:", R.shape)
+    # print("P_fm:", P_fm)
+    # print("C:", C)
+    # print("C.T:", C.T)
+    # print("R:", R)
 
     K_f = P_fm@C.T@np.linalg.inv(C@P_fm@C.T + R)
     # K_f=np.zeros_like(K_f)

@@ -19,10 +19,14 @@ class DroneParameters:
         self.Mm = 4 * self.m + self.M  # total mass [kg]
         self.L = 0.2032  # length [m]
         self.R = 0.1778  # average body radius [m]
-        self.I_x = 2 * (self.M * self.R ** 2) / 5 + 2 * self.m * self.L ** 2  # [kg*m^2] moment of inertia about x
-        self.I_y = 2 * (self.M * self.R ** 2) / 5 + 2 * self.m * self.L ** 2  # [kg*m^2] moment of inertia about y
-        self.I_z = 2 * (self.M * self.R ** 2) / 5 + 4 * self.m * self.L ** 2  # [kg*m^2] moment of inertia about y
-        self.b = 1.8311  # thrust coefficient
+        self.I_x = .491
+        # self.I_x = 2 * (self.M * self.R ** 2) / 5 + 2 * self.m * self.L ** 2  # [kg*m^2] moment of inertia about x
+        self.I_y = .387
+        # self.I_y = 2 * (self.M * self.R ** 2) / 5 + 2 * self.m * self.L ** 2  # [kg*m^2] moment of inertia about y
+        self.I_z = .667
+        # self.I_z = 2 * (self.M * self.R ** 2) / 5 + 4 * self.m * self.L ** 2  # [kg*m^2] moment of inertia about y
+        # self.b = 1.8311  # thrust coefficient
+        self.b = 1.34
         self.d = 1  # drag constant
         self.C = 0.1  # drag coefficient from ground speed plus air speed
 
@@ -64,14 +68,16 @@ class DroneModel:
                             'omega_x',  # roll rate in body-frame [rad/s]
                             'omega_y',  # pitch rate in body-frame [rad/s]
                             'omega_z',  # yaw rate in body-frame [rad/s]
-                            'w',  # wind speed in XY-plane [ms]
-                            'zeta',  # wind direction in XY-plane[rad]
+                            'wx',  # wind speed in XY-plane [ms]
+                            'wy',  # wind direction in XY-plane[rad]
+                            # 'w',  # wind speed in XY-plane [ms]
+                            # 'zeta',  # wind direction in XY-plane[rad]
 
-                            'm',  # mass [kg]
-                            'I_x',  # mass moment of inertia about body x-axis [kg*m^2]
-                            'I_y',  # mass moment of inertia about body y-axis [kg*m^2]
-                            'I_z',  # mass moment of inertia about body z-axis [kg*m^2]
-                            'C',  # translational drag damping constant [N/m/s]
+                            # 'm',  # mass [kg]
+                            # 'I_x',  # mass moment of inertia about body x-axis [kg*m^2]
+                            # 'I_y',  # mass moment of inertia about body y-axis [kg*m^2]
+                            # 'I_z',  # mass moment of inertia about body z-axis [kg*m^2]
+                            # 'C',  # translational drag damping constant [N/m/s]
                             ]
 
         # Input names
@@ -88,18 +94,18 @@ class DroneModel:
     def f(self, X, U):
         """ Dynamic model.
         """
-        # m = self.params.Mm
-        # Ix = self.params.Ix
-        # Iy = self.params.Iy
-        # Iz = self.params.Iz
-        # C = self.params.C
+        m = self.params.Mm
+        Ix = self.params.I_x
+        Iy = self.params.I_y
+        Iz = self.params.I_z
+        C = self.params.C
         g = self.params.g
 
         # States
-        x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, w, zeta, m, Ix, Iy, Iz, C = X
+        x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, wx, wy = np.ravel(X)
 
         # Inputs
-        PWM1,PWM2,PWM3,PWM4 = U
+        PWM1,PWM2,PWM3,PWM4 = np.ravel(U)
 
         # for x shaped drone
         Lx = 2 * self.params.L / np.sqrt(2)
@@ -107,7 +113,7 @@ class DroneModel:
         u_phi = self.params.b * Lx * (-PWM1 + PWM2 + PWM3 - PWM4)
         u_theta = self.params.b * Lx * (-PWM1 + PWM2 - PWM3 + PWM4)
         u_psi = self.params.d * (-PWM1 - PWM2 + PWM3 + PWM4)
-
+        
         # for + shaped drone
         # Lx = self.params.L
         # u_thrust = self.params.b * (PWM1 + PWM2 + PWM3 + PWM4)
@@ -115,7 +121,9 @@ class DroneModel:
         # u_theta = self.params.b * Lx * (PWM1 - PWM3)
         # u_psi = self.params.d * (-PWM1 + PWM2 - PWM3 + PWM4)
 
-            # Drag dynamics
+        # Drag dynamics
+        w = np.sqrt(wx ** 2 + wy ** 2)
+        zeta = np.arctan2(wy, wx)
         a_x = v_x - w * np.cos(psi - zeta)
         a_y = v_y + w * np.sin(psi - zeta)
         a_z = v_z
@@ -125,9 +133,74 @@ class DroneModel:
         theta_dot = omega_y * np.cos(phi) - omega_z * np.sin(phi)
         psi_dot = omega_z * np.cos(phi) * (1 / np.cos(theta)) + omega_y * np.sin(phi) * (1 / np.cos(theta))
 
-        # omega_x_dot = (1 / Ix) * u_phi + psi_dot * theta_dot * (Iy - Iz) / Ix
-        # omega_y_dot = (1 / Iy) * (u_theta) + psi_dot * phi_dot * (Iz - Ix) / Iy
-        # omega_z_dot = (1 / Iz) * (u_psi) + phi_dot * theta_dot * (Ix - Iy) / Iz
+        omega_x_dot = (1 / Ix) * u_phi + omega_z * omega_y * (Iy - Iz) / Ix
+        omega_y_dot = (1 / Iy) * (u_theta) + omega_z * omega_x * (Iz - Ix) / Iy
+        omega_z_dot = (1 / Iz) * (u_psi) + omega_x * omega_y * (Ix - Iy) / Iz
+
+        # Position in inertial frame (ENU, unchanged)
+        x_dot = v_x * np.cos(psi) - v_y * np.sin(psi)
+        y_dot = v_x * np.sin(psi) + v_y * np.cos(psi)
+        z_dot = v_z
+
+        # Velocity in body-level frame (adjusted for FLU)
+        v_x_dot = (1 / m) * (u_thrust * np.cos(phi) * np.sin(theta) - C * a_x) + v_y * psi_dot
+        v_y_dot = (1 / m) * (-u_thrust * np.sin(phi) - C * a_y) - v_x * psi_dot
+        v_z_dot = (1 / m) * (u_thrust * np.cos(phi) * np.cos(theta) - C * v_z - m * g)
+
+        # Wind remains unchanged
+        wx_dot = 0 * wx
+        wy_dot = 0 * wy
+
+
+        # Package and return xdot
+        x_dot = [x_dot, y_dot, z_dot,
+                 v_x_dot, v_y_dot, v_z_dot,
+                 phi_dot, theta_dot, psi_dot,
+                 omega_x_dot, omega_y_dot, omega_z_dot,
+                 wx_dot, wy_dot
+                 ]
+
+        return x_dot
+    
+    def f_c(self, X, U, DT):
+        """ Continuous-time dynamic model.
+        """
+        # m = self.params.Mm
+        # Ix = self.params.Ix
+        # Iy = self.params.Iy
+        # Iz = self.params.Iz
+        # C = self.params.C
+        g = self.params.g
+
+        # States
+        x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, w, zeta, m, Ix, Iy, Iz, C = np.ravel(X)
+
+        # Inputs
+        PWM1,PWM2,PWM3,PWM4 = np.ravel(U)
+
+        # for x shaped drone
+        Lx = 2 * self.params.L / np.sqrt(2)
+        u_thrust = self.params.b * (PWM1 + PWM2 + PWM3 + PWM4)
+        u_phi = self.params.b * Lx * (-PWM1 + PWM2 + PWM3 - PWM4)
+        u_theta = self.params.b * Lx * (-PWM1 + PWM2 - PWM3 + PWM4)
+        u_psi = self.params.d * (-PWM1 - PWM2 + PWM3 + PWM4)
+        
+        # for + shaped drone
+        # Lx = self.params.L
+        # u_thrust = self.params.b * (PWM1 + PWM2 + PWM3 + PWM4)
+        # u_phi = self.params.b * Lx * (-PWM2 + PWM4)
+        # u_theta = self.params.b * Lx * (PWM1 - PWM3)
+        # u_psi = self.params.d * (-PWM1 + PWM2 - PWM3 + PWM4)
+
+        # Drag dynamics
+        a_x = v_x - w * np.cos(psi - zeta)
+        a_y = v_y + w * np.sin(psi - zeta)
+        a_z = v_z
+
+        # Rotation
+        phi_dot = omega_x + omega_z * np.tan(theta) * np.cos(phi) + omega_y * np.tan(theta) * np.sin(phi)
+        theta_dot = omega_y * np.cos(phi) - omega_z * np.sin(phi)
+        psi_dot = omega_z * np.cos(phi) * (1 / np.cos(theta)) + omega_y * np.sin(phi) * (1 / np.cos(theta))
 
         omega_x_dot = (1 / Ix) * u_phi + omega_z * omega_y * (Iy - Iz) / Ix
         omega_y_dot = (1 / Iy) * (u_theta) + omega_z * omega_x * (Iz - Ix) / Iy
@@ -153,31 +226,126 @@ class DroneModel:
         I_y_dot = 0 * Iy
         I_z_dot = 0 * Iz
         C_dot = 0 * C
-
-
-        # Package and return xdot
-        x_dot = [x_dot, y_dot, z_dot,
-                 v_x_dot, v_y_dot, v_z_dot,
-                 phi_dot, theta_dot, psi_dot,
-                 omega_x_dot, omega_y_dot, omega_z_dot,
-                 w_dot, zeta_dot,
-                 m_dot, I_x_dot, I_y_dot, I_z_dot, C_dot
-                 ]
-
-        return x_dot
+        new_X = scipy.integrate.odeint(lambda X, t: [x_dot, y_dot, z_dot,v_x_dot, v_y_dot, v_z_dot, phi_dot, theta_dot, psi_dot, omega_x_dot, omega_y_dot, omega_z_dot, w_dot, zeta_dot, m_dot, I_x_dot, I_y_dot, I_z_dot, C_dot], np.ravel(X), [0, DT])[-1]
+        new_X= np.atleast_2d(new_X).T
+        return new_X
     
-    def f_c(self, X, U, DT):
+    def f_c_car(self, X, U, DT):
         """ Continuous-time dynamic model.
         """
-        # m = self.params.Mm
-        # Ix = self.params.Ix
-        # Iy = self.params.Iy
-        # Iz = self.params.Iz
-        # C = self.params.C
+        m = self.params.Mm
+        Ix = self.params.I_x
+        Iy = self.params.I_y
+        Iz = self.params.I_z
+        C = self.params.C
         g = self.params.g
 
         # States
-        x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, w, zeta, m, Ix, Iy, Iz, C = np.ravel(X)
+        x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, wx, wy = np.ravel(X)
+
+        # Inputs
+        PWM1,PWM2,PWM3,PWM4 = np.ravel(U)
+
+        # for x shaped drone
+        Lx = 2 * self.params.L / np.sqrt(2)
+        u_thrust = self.params.b * (PWM1 + PWM2 + PWM3 + PWM4)
+        u_phi = self.params.b * Lx * (-PWM1 + PWM2 + PWM3 - PWM4)
+        u_theta = self.params.b * Lx * (-PWM1 + PWM2 - PWM3 + PWM4)
+        u_psi = self.params.d * (-PWM1 - PWM2 + PWM3 + PWM4)
+        
+        # for + shaped drone
+        # Lx = self.params.L
+        # u_thrust = self.params.b * (PWM1 + PWM2 + PWM3 + PWM4)
+        # u_phi = self.params.b * Lx * (-PWM2 + PWM4)
+        # u_theta = self.params.b * Lx * (PWM1 - PWM3)
+        # u_psi = self.params.d * (-PWM1 + PWM2 - PWM3 + PWM4)
+
+        # Drag dynamics
+        w = np.sqrt(wx ** 2 + wy ** 2)
+        zeta = np.arctan2(wy, wx)
+        a_x = v_x - w * np.cos(psi - zeta)
+        a_y = v_y + w * np.sin(psi - zeta)
+        a_z = v_z
+
+        # Rotation
+        phi_dot = omega_x + omega_z * np.tan(theta) * np.cos(phi) + omega_y * np.tan(theta) * np.sin(phi)
+        theta_dot = omega_y * np.cos(phi) - omega_z * np.sin(phi)
+        psi_dot = omega_z * np.cos(phi) * (1 / np.cos(theta)) + omega_y * np.sin(phi) * (1 / np.cos(theta))
+
+        omega_x_dot = (1 / Ix) * u_phi + omega_z * omega_y * (Iy - Iz) / Ix
+        omega_y_dot = (1 / Iy) * (u_theta) + omega_z * omega_x * (Iz - Ix) / Iy
+        omega_z_dot = (1 / Iz) * (u_psi) + omega_x * omega_y * (Ix - Iy) / Iz
+
+        # Position in inertial frame (ENU, unchanged)
+        x_dot = v_x * np.cos(psi) - v_y * np.sin(psi)
+        y_dot = v_x * np.sin(psi) + v_y * np.cos(psi)
+        z_dot = v_z
+
+        # Velocity in body-level frame (adjusted for FLU)
+        v_x_dot = (1 / m) * (u_thrust * np.cos(phi) * np.sin(theta) - C * a_x) + v_y * psi_dot
+        v_y_dot = (1 / m) * (-u_thrust * np.sin(phi) - C * a_y) - v_x * psi_dot
+        v_z_dot = (1 / m) * (u_thrust * np.cos(phi) * np.cos(theta) - C * v_z - m * g)*0.0
+
+        # Wind remains unchanged
+        wx_dot = 0 * wx
+        wy_dot = 0 * wy
+
+        new_X = scipy.integrate.odeint(lambda X, t: [x_dot, y_dot, z_dot,v_x_dot, v_y_dot, v_z_dot, phi_dot, theta_dot, psi_dot, omega_x_dot, omega_y_dot, omega_z_dot, wx_dot, wy_dot], np.ravel(X), [0, DT])[-1]
+        new_X= np.atleast_2d(new_X).T
+        return new_X
+    
+    def f_kin_car(self, X, U, DT):
+        """ Continuous-time dynamic model.
+        """
+        # m = self.params.Mm
+        # Ix = self.params.I_x
+        # Iy = self.params.I_y
+        # Iz = self.params.I_z
+        # C = self.params.C
+        # g = self.params.g
+
+        # States
+        x, y, z, v_x, v_y, v_z, phi, theta, psi, wx, wy = np.ravel(X)
+
+        # Inputs
+        u_thrust, u_phi, u_theta, u_psi = np.ravel(U)
+
+        # Rotation
+        phi_dot = u_phi
+        theta_dot = u_theta
+        psi_dot = u_psi
+
+
+        # Position in inertial frame (ENU, unchanged)
+        x_dot = v_x * np.cos(psi) - v_y * np.sin(psi)
+        y_dot = v_x * np.sin(psi) + v_y * np.cos(psi)
+        z_dot = v_z
+
+        # Velocity in body-level frame (adjusted for FLU)
+        v_x_dot = u_thrust * np.cos(phi) * np.sin(theta)
+        v_y_dot = -u_thrust * np.sin(phi) 
+        v_z_dot = u_thrust * np.cos(phi) * np.cos(theta)
+
+        # Wind remains unchanged
+        wx_new = 0*wx
+        wy_new = 0*wy
+
+        new_X = scipy.integrate.odeint(lambda X, t: [x_dot, y_dot, z_dot,v_x_dot, v_y_dot, v_z_dot, phi_dot, theta_dot, psi_dot, wx, wy], np.ravel(X), [0, DT])[-1]
+        new_X= np.atleast_2d(new_X).T
+        return new_X
+    
+    def f_c_small(self, X, U, DT):
+        """ Continuous-time dynamic model.
+        """
+        m = self.params.Mm
+        Ix = self.params.I_x
+        Iy = self.params.I_y
+        Iz = self.params.I_z
+        C = self.params.C
+        g = self.params.g
+
+        # States
+        x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, w, zeta = np.ravel(X)
 
         # Inputs
         PWM1,PWM2,PWM3,PWM4 = np.ravel(U)
@@ -230,7 +398,7 @@ class DroneModel:
         I_y_dot = 0 * Iy
         I_z_dot = 0 * Iz
         C_dot = 0 * C
-        new_X = scipy.integrate.odeint(lambda X, t: [x_dot, y_dot, z_dot,v_x_dot, v_y_dot, v_z_dot, phi_dot, theta_dot, psi_dot, omega_x_dot, omega_y_dot, omega_z_dot, w_dot, zeta_dot, m_dot, I_x_dot, I_y_dot, I_z_dot, C_dot], np.ravel(X), [0, DT])[-1]
+        new_X = scipy.integrate.odeint(lambda X, t: [x_dot, y_dot, z_dot,v_x_dot, v_y_dot, v_z_dot, phi_dot, theta_dot, psi_dot, omega_x_dot, omega_y_dot, omega_z_dot, w_dot, zeta_dot], np.ravel(X), [0, DT])[-1]
         new_X= np.atleast_2d(new_X).T
         return new_X
     
@@ -306,6 +474,78 @@ class DroneModel:
     def h(self, X, U):
         """ Measurement model.
         """
+        m = self.params.Mm
+        Ix = self.params.I_x
+        Iy = self.params.I_y
+        Iz = self.params.I_z
+        C = self.params.C
+        g = self.params.g
+
+        # States
+        x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, wx, wy  = X
+
+        # Inputs
+        PWM1,PWM2,PWM3,PWM4 = U
+
+        # for x shaped drone
+        Lx = 2 * self.params.L / np.sqrt(2)
+        u_thrust = self.params.b * (PWM1 + PWM2 + PWM3 + PWM4)
+        u_phi = self.params.b * Lx * (-PWM1 + PWM2 + PWM3 - PWM4)
+        u_theta = self.params.b * Lx * (-PWM1 + PWM2 - PWM3 + PWM4)
+        u_psi = self.params.d * (-PWM1 - PWM2 + PWM3 + PWM4)
+
+        # for + shaped drone
+        # Lx = self.params.L
+        # u_thrust = self.params.b * (PWM1 + PWM2 + PWM3 + PWM4)
+        # u_phi = self.params.b * Lx * (-PWM2 + PWM4)
+        # u_theta = self.params.b * Lx * (PWM1 - PWM3)
+        # u_psi = self.params.d * (-PWM1 + PWM2 - PWM3 + PWM4)
+
+        # Rotation
+        phi_dot = omega_x + omega_z * np.tan(theta) * np.cos(phi) + omega_y * np.tan(theta) * np.sin(phi)
+        theta_dot = omega_y * np.cos(phi) - omega_z * np.sin(phi)
+        psi_dot = omega_z * np.cos(phi) * (1 / np.cos(theta)) + omega_z * np.sin(phi) * (1 / np.cos(theta))
+
+        # Ground speed & course direction in body-level frame
+        G = np.sqrt(v_x ** 2 + v_y ** 2)
+        r = G / z
+        beta = np.arctan2(v_y, v_x)
+
+        # Airspeed & apparent airflow angle in body-level frame
+        w = np.sqrt(wx ** 2 + wy ** 2)
+        zeta = np.arctan2(wy, wx)
+        a_x = v_x - w * np.cos(psi - zeta)
+        a_y = v_y + w * np.sin(psi - zeta)
+        a_z = v_z
+        a = np.sqrt(a_x ** 2 + a_y ** 2)
+        gamma = np.arctan2(a_y, a_x)
+
+        # Velocity in body-level frame (adjusted for FLU)
+        v_x_dot = (1 / m) * (u_thrust * np.cos(phi) * np.sin(theta) - C * a_x) + v_y * psi_dot
+        v_y_dot = (1 / m) * (-u_thrust * np.sin(phi) - C * a_y) - v_x * psi_dot
+        v_z_dot = (1 / m) * (u_thrust * np.cos(phi) * np.cos(theta) - C * v_z - m * g)
+
+        q = np.sqrt(v_x_dot ** 2 + v_y_dot ** 2)
+        alpha = np.arctan2(v_y_dot, v_x_dot)
+
+        # Unwrap angles
+        if np.array(phi).ndim > 0:
+            if np.array(phi).shape[0] > 1:
+                phi = np.unwrap(phi)
+                theta = np.unwrap(theta)
+                psi = np.unwrap(psi)
+                beta = np.unwrap(beta)
+                alpha = np.unwrap(alpha)
+
+        # Y = np.hstack((X, beta))
+        Y = [x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, wx, wy,
+             G, beta, a, gamma, q, alpha, r]
+
+        return Y
+    
+    def h_c(self, X, U):
+        """ Continuous-time measurement model.
+        """
         # m = self.params.Mm
         # Ix = self.params.Ix
         # Iy = self.params.Iy
@@ -314,10 +554,10 @@ class DroneModel:
         g = self.params.g
 
         # States
-        x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, w, zeta, m, Ix, Iy, Iz, C = X
+        x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, w, zeta, m, Ix, Iy, Iz, C = np.ravel(X)
 
         # Inputs
-        PWM1,PWM2,PWM3,PWM4 = U
+        PWM1,PWM2,PWM3,PWM4 = np.ravel(U)
 
         # for x shaped drone
         Lx = 2 * self.params.L / np.sqrt(2)
@@ -367,24 +607,163 @@ class DroneModel:
                 beta = np.unwrap(beta)
                 alpha = np.unwrap(alpha)
 
-        # Y = np.hstack((X, beta))
-        Y = [x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, w, zeta, m, Ix, Iy, Iz, C,
-             G, beta, a, gamma, q, alpha, r]
+        # mocap measurements
+        Px = x
+        Py = y
+        Pz = z
+        P_cluster = np.array([Px, Py, Pz])
+        Vx = v_x
+        Vy = v_y
+        Vz = v_z
+        V_cluster = np.array([Vx, Vy, Vz])
+        Phi = phi
+        Theta = theta
+        Psi = psi
+        Attitude_cluster = np.array([Phi, Theta, Psi])
+        Mocap_cluster = np.array([Px, Py, Pz, Vx, Vy, Vz, Phi, Theta, Psi])
+        # IMU measurements
+        Omega_x = omega_x
+        Omega_y = omega_y
+        Omega_z = omega_z
+        Omega_cluster = np.array([Omega_x, Omega_y, Omega_z])
+        Ax = v_x_dot
+        Ay = v_y_dot
+        Az = v_z_dot
+        A_cluster = np.array([Ax, Ay, Az])
+        IMU_cluster = np.array([Phi, Theta, Psi, Omega_x, Omega_y, Omega_z, Ax, Ay, Az])
+        # optical flow measurements
+        OF_x = v_x*(1/z)
+        OF_y = v_y*(1/z)
+        OF_XY = np.array([OF_x, OF_y])
+        OF_z = v_z*(1/z)
+        OF_cluster = np.array([OF_x, OF_y, OF_z])
+        OF_cluster_XY = np.array([OF_x, OF_y])
+        # wind measurements
+        Awx = a_x
+        Awy = a_y
+        Awz = a_z
+        Aa = a
+        Agamma = gamma
+        Wind_XY = np.array([Awx, Awy])
+        Wind_cluster = np.array([Awx, Awy, Awz, Aa, Agamma])
+        Wind_cluster_XY = np.array([Awx, Awy,Aa, Agamma])
 
+        y_all=np.atleast_2d(np.hstack((P_cluster, V_cluster, Attitude_cluster, Omega_cluster, A_cluster, OF_cluster_XY, Wind_XY))).T
+        y_real = np.atleast_2d(np.hstack((IMU_cluster, OF_cluster_XY, Wind_XY))).T
+        Y = y_real
+        # Y= y_all
         return Y
-    
-    def h_c(self, X, U):
+
+    def h_kin_car(self, X, U):
         """ Continuous-time measurement model.
         """
-        # m = self.params.Mm
-        # Ix = self.params.Ix
-        # Iy = self.params.Iy
-        # Iz = self.params.Iz
-        # C = self.params.C
+
+        # States
+        x, y, z, v_x, v_y, v_z, phi, theta, psi, wx, wy= np.ravel(X)
+
+        # Inputs
+        u_thrust, u_phi, u_theta, u_psi = np.ravel(U)
+
+        # Rotation
+        phi_dot = u_phi
+        theta_dot = u_theta
+        psi_dot = u_psi
+
+        # Ground speed & course direction in body-level frame
+        G = np.sqrt(v_x ** 2 + v_y ** 2)
+        r = G / z
+        beta = np.arctan2(v_y, v_x)
+
+        # Airspeed & apparent airflow angle in body-level frame
+        # Drag dynamics
+        w = np.sqrt(wx ** 2 + wy ** 2)
+        zeta = np.arctan2(wy, wx)
+        a_x = v_x - w * np.cos(psi - zeta)
+        a_y = v_y + w * np.sin(psi - zeta)
+        a_z = v_z
+        a = np.sqrt(a_x ** 2 + a_y ** 2)
+        gamma = np.arctan2(a_y, a_x)
+
+        # Velocity in body-level frame (adjusted for FLU)
+        v_x_dot = (1 / m) * (u_thrust * np.cos(phi) * np.sin(theta) - C * a_x) + v_y * psi_dot
+        v_y_dot = (1 / m) * (-u_thrust * np.sin(phi) - C * a_y) - v_x * psi_dot
+        v_z_dot = (1 / m) * (u_thrust * np.cos(phi) * np.cos(theta) - C * v_z - m * g)
+
+        q = np.sqrt(v_x_dot ** 2 + v_y_dot ** 2)
+        alpha = np.arctan2(v_y_dot, v_x_dot)
+
+        # Unwrap angles
+        if np.array(phi).ndim > 0:
+            if np.array(phi).shape[0] > 1:
+                phi = np.unwrap(phi)
+                theta = np.unwrap(theta)
+                psi = np.unwrap(psi)
+                beta = np.unwrap(beta)
+                alpha = np.unwrap(alpha)
+
+        # mocap measurements
+        Px = x
+        Py = y
+        Pz = z
+        P_cluster = np.array([Px, Py, Pz])
+        Vx = v_x
+        Vy = v_y
+        Vz = v_z
+        V_cluster = np.array([Vx, Vy, Vz])
+        Phi = phi
+        Theta = theta
+        Psi = psi
+        Attitude_cluster = np.array([Phi, Theta, Psi])
+        Mocap_cluster = np.array([Px, Py, Pz, Vx, Vy, Vz, Phi, Theta, Psi])
+        # IMU measurements
+        Omega_x = omega_x
+        Omega_y = omega_y
+        Omega_z = omega_z
+        Omega_cluster = np.array([Omega_x, Omega_y, Omega_z])
+        Ax = v_x_dot
+        Ay = v_y_dot
+        Az = v_z_dot
+        A_cluster = np.array([Ax, Ay, Az])
+        IMU_cluster = np.array([Phi, Theta, Psi, Omega_x, Omega_y, Omega_z, Ax, Ay, Az])
+        # optical flow measurements
+        OF_x = v_x*(1/z)
+        OF_y = v_y*(1/z)
+        OF_XY = np.array([OF_x, OF_y])
+        OF_z = v_z*(1/z)
+        OF_cluster = np.array([OF_x, OF_y, OF_z])
+        OF_cluster_XY = np.array([OF_x, OF_y])
+        # wind measurements
+        Awx = a_x
+        Awy = a_y
+        Awz = a_z
+        Aa = a
+        Agamma = gamma
+        Wind_XY = np.array([Awx, Awy])
+        Wind_cluster = np.array([Awx, Awy, Awz, Aa, Agamma])
+        Wind_cluster_XY = np.array([Awx, Awy,Aa, Agamma])
+
+        Y_all=np.atleast_2d(np.hstack((P_cluster, V_cluster, Attitude_cluster, Omega_cluster, A_cluster, OF_cluster_XY, Wind_XY))).T
+        Y_real = np.atleast_2d(np.hstack((IMU_cluster, OF_cluster_XY, Wind_XY))).T
+        Y_no_wind = np.atleast_2d(np.hstack((IMU_cluster, OF_cluster_XY))).T
+        Y_no_OF = np.atleast_2d(np.hstack((IMU_cluster, Wind_XY))).T
+        Y_IMU_only = np.atleast_2d(np.hstack((IMU_cluster))).T
+        Y = Y_IMU_only
+        # Y= y_all
+        return Y
+    
+
+    def h_c_small(self, X, U):
+        """ Continuous-time measurement model.
+        """
+        m = self.params.Mm
+        Ix = self.params.I_x
+        Iy = self.params.I_y
+        Iz = self.params.I_z
+        C = self.params.C
         g = self.params.g
 
         # States
-        x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, w, zeta, m, Ix, Iy, Iz, C = np.ravel(X)
+        x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, w, zeta = np.ravel(X)
 
         # Inputs
         PWM1,PWM2,PWM3,PWM4 = np.ravel(U)
@@ -595,7 +974,12 @@ class DroneModel:
 
 
 class DroneSimulator(Simulator):
-    def __init__(self, dt=0.1, mpc_horizon=10, r_u=1e-2, control_mode='velocity_body_level'):
+    def __init__(self,
+                 dt=0.1,
+                 mpc_horizon=10,
+                 r_u=1e-2,
+                 control_mode='velocity_body_level',
+                 params: DroneParameters = None):
         self.dynamics = DroneModel()
         super().__init__(self.dynamics.f, self.dynamics.h, dt=dt, mpc_horizon=mpc_horizon,
                          state_names=self.dynamics.state_names,
@@ -603,8 +987,8 @@ class DroneSimulator(Simulator):
                          measurement_names=self.dynamics.measurement_names)
 
         # Set parameters
-        self.params = DroneParameters()
-
+        self.params = params or DroneParameters()
+        print('Drone parameters:', self.params)
         # Place limit on controls
         self.mpc.bounds['lower', '_u', 'PWM1'] = 0
         self.mpc.bounds['lower', '_u', 'PWM2'] = 0
@@ -642,12 +1026,12 @@ class DroneSimulator(Simulator):
         # Set input penalty: make this small for accurate state following
         self.mpc.set_rterm(PWM1=r_u, PWM2=r_u, PWM3=r_u, PWM4=r_u)
 
-    def update_setpoint(self, x=None, y=None, v_x=None, v_y=None, psi=None, z=None, w=None, zeta=None):
+    def update_setpoint(self, x=None, y=None, v_x=None, v_y=None, psi=None, z=None, wx=None, wy=None):
         """ Set the set-point variables.
         """
 
         # Set time
-        T = self.dt * (len(w) - 1)
+        T = self.dt * (len(wx) - 1)
         tsim = np.arange(0, T + self.dt / 2, step=self.dt)
 
         # Set control setpoints
@@ -681,14 +1065,16 @@ class DroneSimulator(Simulator):
                     'omega_x': 0.0 * np.ones_like(tsim),
                     'omega_y': 0.0 * np.ones_like(tsim),
                     'omega_z': 0.0 * np.ones_like(tsim),
-                    'w': w,
-                    'zeta': zeta,
+                    'wx': wx,
+                    'wy': wy,
+                    # 'w': w,
+                    # 'zeta': zeta,
 
-                    'm': self.params.Mm * np.ones_like(tsim),
-                    'I_x': self.params.I_x * np.ones_like(tsim),
-                    'I_y': self.params.I_y * np.ones_like(tsim),
-                    'I_z': self.params.I_z * np.ones_like(tsim),
-                    'C': self.params.C * np.ones_like(tsim),
+                    # 'm': self.params.Mm * np.ones_like(tsim),
+                    # 'I_x': self.params.I_x * np.ones_like(tsim),
+                    # 'I_y': self.params.I_y * np.ones_like(tsim),
+                    # 'I_z': self.params.I_z * np.ones_like(tsim),
+                    # 'C': self.params.C * np.ones_like(tsim),
                     }
 
         # Update the simulator set-point
