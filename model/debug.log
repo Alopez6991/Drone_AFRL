@@ -1,0 +1,28 @@
+2025-06-13 11:38:07,007 [INFO] Import Error.
+Could not import cvxpy.
+To use convex total variation regularized derivatives, install cvxpy (http://www.cvxpy.org/install/index.html)
+ Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/
+Despite this error, you can still use the iterative TVR method.
+
+2025-06-13 11:38:07,028 [INFO] Import Error
+Could not import cvxpy.
+Install cvxpy (http://www.cvxpy.org/install/index.html) to use lineardiff.
+Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/ 
+
+2025-06-13 11:38:07,030 [INFO] Import Error
+Despite these import errors, you can still use many of the methods without additional installations.
+
+2025-06-13 11:55:01,978 [INFO] Import Error.
+Could not import cvxpy.
+To use convex total variation regularized derivatives, install cvxpy (http://www.cvxpy.org/install/index.html)
+ Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/
+Despite this error, you can still use the iterative TVR method.
+
+2025-06-13 11:55:01,991 [INFO] Import Error
+Could not import cvxpy.
+Install cvxpy (http://www.cvxpy.org/install/index.html) to use lineardiff.
+Recommended solver: MOSEK, free academic license available: https://www.mosek.com/products/academic-licenses/ 
+
+2025-06-13 11:55:01,992 [INFO] Import Error
+Despite these import errors, you can still use many of the methods without additional installations.
+
