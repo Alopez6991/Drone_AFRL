@@ -10,8 +10,9 @@ class TrajectoryGenerator:
 
     def __init__(self):
         print("TrajectoryGenerator initialized.")
-        self.wx = 1.5  # default wx
+        self.wx = 1.0  # default wx
         self.wy = 2.0  # default wy
+        print(f"Default wx={self.wx}, wy={self.wy}")
         self.dt = 0.1
         
 
