@@ -1,1 +1,1 @@
-FLAG = '4'  # default value, but will be overwritten by your notebook
+FLAG = '2'  # default value, but will be overwritten by your notebook

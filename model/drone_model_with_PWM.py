@@ -8,6 +8,9 @@ from pybounds import Simulator
 import scipy
 import sympy as sp
 import drone_config
+import sys
+sys.path.append('../utils_2')
+import utility
 
 
 
@@ -822,11 +825,11 @@ class DroneModel:
         # Unwrap angles
         if np.array(phi).ndim > 0:
             if np.array(phi).shape[0] > 1:
-                phi = np.unwrap(phi)
-                theta = np.unwrap(theta)
-                psi = np.unwrap(psi)
-                beta = np.unwrap(beta)
-                alpha = np.unwrap(alpha)
+                phi = utility.unwrap_angle(phi)
+                theta = utility.unwrap_angle(theta)
+                psi = utility.unwrap_angle(psi)
+                beta = utility.unwrap_angle(beta)
+                alpha = utility.unwrap_angle(alpha)
         # self.measurement_names = ['Ax','Ay','Az', 'rx','ry','Wax','Way']
         # Y = np.hstack((X, beta))
         Y = [x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, wx, wy,
@@ -868,8 +871,8 @@ class DroneModel:
         # Unwrap angles
         if np.array(psi).ndim > 0:
             if np.array(psi).shape[0] > 1:
-                X[6] = np.unwrap(psi)
-                beta = np.unwrap(beta)
+                X[6] = utility.unwrap_angle(psi)
+                beta = utility.unwrap_angle(beta)
         # self.measurement_names = ['Ax','Ay','Az', 'rx','ry','Wax','Way']
         # Y = np.hstack((X, beta))
         Y = [x, y, z, v_x, v_y, v_z, psi, wx, wy,
@@ -924,8 +927,8 @@ class DroneModel:
         # Unwrap angles
         if np.array(psi).ndim > 0:
             if np.array(psi).shape[0] > 1:
-                X[6] = np.unwrap(psi)
-                beta = np.unwrap(beta)
+                X[6] = utility.unwrap_angle(psi)
+                beta = utility.unwrap_angle(beta)
         # self.measurement_names = ['Ax','Ay','Az', 'rx','ry','Wax','Way']
         # Y = np.hstack((X, beta))
         Y = [x, y, z, v_x, v_y, v_z, psi, wx, wy,
@@ -983,8 +986,8 @@ class DroneModel:
         # Unwrap angles
         if np.array(psi).ndim > 0:
             if np.array(psi).shape[0] > 1:
-                X[6] = np.unwrap(psi)
-                beta = np.unwrap(beta)
+                X[6] = utility.unwrap_angle(psi)
+                beta = utility.unwrap_angle(beta)
         # self.measurement_names = ['Ax','Ay','Az', 'rx','ry','Wax','Way']
         # Y = np.hstack((X, beta))
         Y = [x, y, z, v_x, v_y, v_z, phi, theta, psi, wx, wy,
@@ -1038,8 +1041,8 @@ class DroneModel:
         # Unwrap angles
         if np.array(psi).ndim > 0:
             if np.array(psi).shape[0] > 1:
-                X[6] = np.unwrap(psi)
-                beta = np.unwrap(beta)
+                X[6] = utility.unwrap_angle(psi)
+                beta = utility.unwrap_angle(beta)
         # self.measurement_names = ['Ax','Ay','Az', 'rx','ry','Wax','Way']
         # Y = np.hstack((X, beta))
         Y = [x, y, z, v_x, v_y, v_z, phi, theta, psi, omega_x, omega_y, omega_z, wx, wy,
@@ -1105,11 +1108,11 @@ class DroneModel:
         # Unwrap angles
         if np.array(phi).ndim > 0:
             if np.array(phi).shape[0] > 1:
-                phi = np.unwrap(phi)
-                theta = np.unwrap(theta)
-                psi = np.unwrap(psi)
-                beta = np.unwrap(beta)
-                alpha = np.unwrap(alpha)
+                phi = utility.unwrap_angle(phi)
+                theta = utility.unwrap_angle(theta)
+                psi = utility.unwrap_angle(psi)
+                beta = utility.unwrap_angle(beta)
+                alpha = utility.unwrap_angle(alpha)
 
         # mocap measurements
         Px = x
@@ -1199,11 +1202,11 @@ class DroneModel:
         # Unwrap angles
         if np.array(phi).ndim > 0:
             if np.array(phi).shape[0] > 1:
-                phi = np.unwrap(phi)
-                theta = np.unwrap(theta)
-                psi = np.unwrap(psi)
-                beta = np.unwrap(beta)
-                alpha = np.unwrap(alpha)
+                phi = utility.unwrap_angle(phi)
+                theta = utility.unwrap_angle(theta)
+                psi = utility.unwrap_angle(psi)
+                beta = utility.unwrap_angle(beta)
+                alpha = utility.unwrap_angle(alpha)
 
         # mocap measurements
         Px = x
@@ -1607,11 +1610,11 @@ class DroneModel:
         # Unwrap angles
         if np.array(phi).ndim > 0:
             if np.array(phi).shape[0] > 1:
-                phi = np.unwrap(phi)
-                theta = np.unwrap(theta)
-                psi = np.unwrap(psi)
-                beta = np.unwrap(beta)
-                alpha = np.unwrap(alpha)
+                phi = utility.unwrap_angle(phi)
+                theta = utility.unwrap_angle(theta)
+                psi = utility.unwrap_angle(psi)
+                beta = utility.unwrap_angle(beta)
+                alpha = utility.unwrap_angle(alpha)
 
         # mocap measurements
         Px = x

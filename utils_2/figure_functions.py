@@ -305,7 +305,7 @@ def plot_heatmap_log_timeseries(data, log_ticks=None, data_labels=None,
 
     # Make figure/axis
     if (fig is None) and (ax is None):
-        fig, ax = plt.subplots(1, 1, figsize=(5 * 1, 4 * 1), dpi=150)
+        fig, ax = plt.subplots(1, 1, figsize=(1 * 1, 100 * 1), dpi=300)
     elif fig is None:
         ax = plt.gca()
 
